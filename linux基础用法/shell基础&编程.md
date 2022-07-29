@@ -350,6 +350,7 @@ if cmd
 then
 	true-commands
 elif cmd
+then
 	commands
 else
 	commands
@@ -466,6 +467,10 @@ do
 done
 ```
 > list是以空格为分隔的序列
+
+**break**
+在循环中可以使用`break`指令跳出循环，`break n`表示跳出n重循环。
+
 ### while-do-done
 while则是根据命令的执行结果决定是否执行循环，0则继续执行，非0则终止。
 ```sh

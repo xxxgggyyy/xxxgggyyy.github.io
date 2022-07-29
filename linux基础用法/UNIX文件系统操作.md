@@ -241,7 +241,7 @@ grep [option]... patterns [file]...
 
 ```
 tar -cvf archive.tar file1 file2 dir
-tar -xcf archive.tar -C dest_dir
+tar -xvf archive.tar -C dest_dir
 # 对应加解档参数前添加需要的压缩算法参数即可
 tar -zcf archive.tar.gz file1 file
 tar -zxf archive.tar.gz
