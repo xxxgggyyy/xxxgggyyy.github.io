@@ -218,6 +218,23 @@ trash(){
 }
 ```
 
+## || Shell历史命令
+shell会把使用过的命令保存到一个文件中，bash默认保存在主目录的`.bash_history`中，环境变量`HISTSIZE`和`HISTFILE`控制保存的命令数量和文件。
+
+`history`命令查看历史命令列表
+```shell
+history 10 # 列出最近的10条命令
+```
+
+`fc`命令可用于列出、编辑、重复执行历史命令
+```shell
+fc -l # 同history
+fc -e vim 225 # 先使用vim重新编辑序号为225的命令然后执行
+fc -s # 执行最近一条命令
+fc -s 225 # 执行225号命令
+fc -s vim # 执行最近的以vim开头的一条指令
+```
+
 ## || Shell配置文件
 
 sh、ksh、bash中均有两类配置文件，系统配置文件（全局配置）和用户配置文件。
