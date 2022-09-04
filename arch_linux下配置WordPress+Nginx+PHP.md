@@ -101,7 +101,7 @@ server {
         location / {
             root   $wp_root;
             index  index.php index.html index.htm;
-            # 必须被设置，不然前端无法访问rest接口
+            # 必须被设置，不然前端无法访问wordpress的REST接口
             try_files $uri $uri/ /index.php?$args;
         }
 
@@ -204,7 +204,7 @@ define('WP_SITEURL', 'https://' . $_SERVER['HTTP_HOST']);
 define('WP_HOME', 'https://' . $_SERVER['HTTP_HOST']);
 
 // 必须被配置，不然上面的相对路径插件会失效
-// 按这样配置后无需再使用相对路径插件
+// 按这样配置后其实无需再使用相对路径插件
 // 使用相对路径插件，是因为没有如下设置，导致仅设置sitrurl和home会导致重定向次数过多
 $_SERVER['HTTPS'] = 'on';
 define('FORCE_SSL_LOGIN', true);
