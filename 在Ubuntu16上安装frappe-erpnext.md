@@ -57,6 +57,8 @@ apt install mariadb-server-10.3
 > 注意`root`密码是必须要设置的
 > 新增具有完全特权的用户是不行的，因为frappe本身要使用特权来新建数据库，而非root用户无法立刻拥有新建的数据库的特权
 > 注意MariaDB的认证策略，如果只被配置为了使用`unix_socket`插件将无法使用账号密码登录
+>`update mysql.user set authentication_string=PASSWORD("123456"),plugin='mysql_native_password' where user='root';`
+>`flush privileges;`
 
 > 友情提示：最好把VPN挂着
 
@@ -114,7 +116,7 @@ bench --version
 建立一个`bench`实例，并运行`bench`
 
 ```sh
-bench init --frappe-bench
+bench init --version version-13 frappe-bench
 # 在第一次建立site和app时最好保持bench server处于开启状态
 cd frappe-bench
 bench start &
@@ -149,6 +151,34 @@ bench start &
 > `erpnext`的中文翻译是真的不靠谱，可以修改`frappe-bench/apps/erpnext/erpnext/translations/zh.csv`修改相应的翻译
 
 若要修改`erpnext`中的Workspace需要设置`bench set-config -g developer_mode true`为开发者模式
+
+# 产品模式
+
+即要以非开发模式运行，还需安装`nginx`和`supervisor`
+
+```sh
+sudo apt install nginx
+sudo apt install supervisor
+```
+
+生成对应的配置文件，保存在`~/frappe-bench/config`目录下
+```sh
+bench setup nginx
+bench setup supervisor
+```
+
+此时`nginx`用来提供静态资源以及转发请求
+`supervisor`则负责所有的`frappe-erpnext`组件的启动和崩溃重启
+
+```sh
+# 拷贝配置
+cd ~/frappe-bench
+# 软链接的源参数必须采用绝对路径
+ln -sf `pwd`/config/supervisor.conf /etc/supervisor/conf.d/frappe-bench.conf
+ln -sf `pwd`/config/nginx.conf /etc/ngin/conf.d/frappe-benc.conf
+```
+`nginx`可能默认占用`80`端口，需要自行删除该`server`，可能是`/etc/nginx/conf.d/default.conf`也可能是`/etc/nginx/sites-available`
+
 
 # 问题
 
