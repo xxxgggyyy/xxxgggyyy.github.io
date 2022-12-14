@@ -128,7 +128,7 @@ bench start &
 cd frappe-bench
 # 保证后台运行
 bench start &
-bench get-app --branch version-13 https://github.com/frappe/frappe.git
+bench get-app --branch version-13 https://github.com/frappe/erpnext.git
 
 # 建立一个site
 # 会要求你输入Mariadb的root密码
