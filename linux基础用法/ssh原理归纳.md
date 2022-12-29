@@ -18,7 +18,10 @@
 > 假设此时client已经确认server的pub公钥是正确的了
 ### 使用口令登录
 此时client使用server的pub（s_pub），对口令加密发送给server，server收到后用私钥解密，并执行linux的登录认证，登录成功则返回登录状态。
-此时，client在真正建立通信前，还需要自己生成一对临时公私钥，用来实现server到client的加密通信。此时由于client已可直接和server的加密通信（s_pub已人工认证正确），直接分发公钥(c_pub)即可。（具体原理待验证，只是合理猜测）
+此时，client在真正建立通信前，还需要自己生成一对临时公私钥，用来实现server到client的加密通信。
+此时由于client已可直接和server的加密通信（s_pub已人工认证正确），直接用s_pub分发公钥(c_pub)即可。（具体原理待验证，只是合理猜测）
+
+
 ### 使用公钥登录
 client首先生成一对公私钥，然后把公钥手动添加到server的`~/.ssh/authorized_keys`。
 > 手动添加，方法很多比如scp，ssh-copy-id
