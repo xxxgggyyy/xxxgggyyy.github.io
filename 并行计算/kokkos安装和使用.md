@@ -35,6 +35,24 @@ Kokkos编程模型的特点是6个核心抽象：`Execution Spaces, Execution Pa
 
 ![编程模型](./kokkos_imgs/pm.png)
 
+`ExecutionSpace`和`MemorySpace`不再赘述。
+
+`Execution Patterns`也就是计算单元的并行执行模式，主要由以下三类：
+
+1. `parallel_for`类似与openMP的`#pragma omp for`，他会自动对每次迭代进行合理调度和分配。
+
+2. `parallel_reduce`，功能其实也类似于`parallel_for`，只不过每个迭代中会提供一个中间值，该线程的某些计算结果可以放在里面，最后在调用`join`将所有的中间结果合并，非自定义的`join`就是简单的加法
+
+3. `parallel_scan`，提供前缀扫描。默认不提供`join`和`init`的扫描为加法扫描，类似于计算前缀和。
+
+`ExecutionPolices`即执行策略，比如`RangePoliy`提供一个一维的迭代空间，`TeamPolicy`不提供迭代空间，而是类似与CUDA的线程块和网格的概念。
+
+`MemoryLayout`即内存布局，包括`LayoutLeft`和`LayoutRight`、`LayoutStide`等。前两个就是数组列主序和行主序的概念。`Stride`则是由于实际的一个数组存储可能还包括的额外的空间需要，比如对齐，比如体系结构相关的数据，所以其用于表示数组每个维度变化1需要跨越的数据量。
+
+`MemoryTraits`则是该块空间是否具有原子访问的特定等。
+
+> 这里只是及其简单的概述，详情见[Here](https://kokkos.github.io/kokkos-core-wiki/ProgrammingGuide/View.html)
+
 # Kokkos安装&测试
 
 ## || 测试环境&安装
