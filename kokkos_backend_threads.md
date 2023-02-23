@@ -31,11 +31,6 @@ int main(int argc, char* argv[]) {
 
 之后的说明会结合该基本使用框架来阐述Kokkos是如何使用C++线程作为后端来执行并行计算的。
 
-1. 概要说明大致原理
-2. 相关数据结构说明
-3. 线程的生成与执行
-4. 线程同步
-
 # || 概述
 
 在介绍具体对应某个后端实现之前，先说明Kokkos的总体执行框架。
@@ -233,7 +228,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 对于C++线程作为后端来说，Kokkos在`initialize()`函数执行时，大概进行了如下工作：
 
-1. 使用hwloc检测当前设备的执行能力
+1. 使用hwloc检测当前设备拓扑结构以确定最佳线程数量
 >主要检测NUMA数量、每个NUMA的Core数量、每个Core支持的线程数量
 
 2. 建立线程池
@@ -286,38 +281,49 @@ class ThreadsExec {
   // 这里仅仅列出了和ParallelFor以及RangePolicy相关的一小部分内容
 };
 
+// 其代表主线程
+ThreadsExec s_threads_process;
+// 生成的子线程拥有的ThreadsExec结构的指针数组
+ThreadsExec *s_threads_exec[ThreadsExec::MAX_THREAD_COUNT] = {nullptr};
+// 同上，只不过是每个线程的id
+std::thread::id s_threads_pid[ThreadsExec::MAX_THREAD_COUNT];
+// 记录每个线程在CPU拓扑结构中的坐标
+std::pair<unsigned, unsigned> s_threads_coord[ThreadsExec::MAX_THREAD_COUNT];
+
+// 0: total_threads count
+// 1: threads count per numa
+// 2: threads count per core
+int s_thread_pool_size[3] = {0, 0, 0};
+
+// 每个线程实际要执行的函数，在该函数中执行用户定义的Functor()
+void (*volatile s_current_function)(ThreadsExec &, const void *);
+const void *volatile s_current_function_arg = nullptr;
 }// Impl namespce
 }// Kokkos
-
 ```
+`ThreadExec`是每个线程都会首先构造的一个数据结构。Kokkos在其中存放每个线程的状态，和当前线程的rank以及在机器的处理器拓扑结构中的位置`（numa_coord, core_coord)`
 
+而定义的全局变量含义见注释。
+
+如前所述， `Kokkos::initialize()`在执行初始化C++线程后端时，会调用`static ThreadsExec::initialize()`,这是在`Threads::impl_initialize()`函数中调用的。
+
+在`Threads::initialize()`中执行了上述的两个具体任务：
+
+1. 要么使用用户指定的`thread_count`设置线程池的大小，要么在hwloc可用时，将线程池大小设置为物理线程的数量。
+2. 创建线程池 
+> 设计到hwloc的具体用法，这部分源码只能先大致分析一下原理
+
+代码如下：
 ```cpp
 
 void ThreadsExec::initialize(int thread_count){
-  // legacy arguments
-  unsigned thread_count       = thread_count_arg == -1 ? 0 : thread_count_arg;
-  unsigned use_numa_count     = 0;
-  unsigned use_cores_per_numa = 0;
-  bool allow_asynchronous_threadpool = false;
-  // need to provide an initializer for Intel compilers
-  static const Sentinel sentinel = {};
-
-  const bool is_initialized = 0 != s_thread_pool_size[0];
-
-  unsigned thread_spawn_failed = 0;
-
-  for (int i = 0; i < ThreadsExec::MAX_THREAD_COUNT; i++)
-    s_threads_exec[i] = nullptr;
-
+  ......
   if (!is_initialized) {
-    // If thread_count, use_numa_count, or use_cores_per_numa are zero
-    // then they will be given default values based upon hwloc detection
-    // and allowed asynchronous execution.
-
     const bool hwloc_avail = Kokkos::hwloc::available();
     const bool hwloc_can_bind =
         hwloc_avail && Kokkos::hwloc::can_bind_threads();
 
+    // 用户未指定线程数量，则使用hwloc设置为机器的物理线程数量
     if (thread_count == 0) {
       thread_count = hwloc_avail
                          ? Kokkos::hwloc::get_available_numa_count() *
@@ -326,6 +332,9 @@ void ThreadsExec::initialize(int thread_count){
                          : 1;
     }
 
+    // 该mapping，为每个线程分配CPU拓扑结构坐标
+    // 即每个线程应该运行那个numa上，有该运行在该numa上的core上
+    // 如此，可以将线程利用hwloc绑定在具体的core上执行
     const unsigned thread_spawn_begin = hwloc::thread_mapping(
         "Kokkos::Threads::initialize", allow_asynchronous_threadpool,
         thread_count, use_numa_count, use_cores_per_numa, s_threads_coord);
@@ -338,9 +347,11 @@ void ThreadsExec::initialize(int thread_count){
       s_threads_coord[0] = std::pair<unsigned, unsigned>(~0u, ~0u);
     }
 
+    // 设置线程池的大小
     s_thread_pool_size[0] = thread_count;
     s_thread_pool_size[1] = s_thread_pool_size[0] / use_numa_count;
     s_thread_pool_size[2] = s_thread_pool_size[1] / use_cores_per_numa;
+    // 先设置所有的线程执行体为一个空函数
     s_current_function =
         &execute_function_noop;  // Initialization work function
 
@@ -360,7 +371,12 @@ void ThreadsExec::initialize(int thread_count){
       // Wait until spawned thread has attempted to initialize.
       // If spawning and initialization is successful then
       // an entry in 's_threads_exec' will be assigned.
-      ThreadsExec::spawn();
+      // 在此处生成新线程
+      // 这里直接展开了spawn函数
+      ThreadsExec::spawn();{
+          std::thread t(internal_cppthread_driver);
+          t.detach();
+      }
       wait_yield(s_threads_process.m_pool_state, ThreadsExec::Inactive);
       if (s_threads_process.m_pool_state == ThreadsExec::Terminating) break;
     }
@@ -376,4 +392,269 @@ void ThreadsExec::initialize(int thread_count){
 
     ......
   }
+
+void ThreadsExec::internal_cppthread_driver() {
+    ......
+    ThreadsExec::driver();
+    ......
+}
+
+void ThreadsExec::driver() {
+  SharedAllocationRecord<void, void>::tracking_enable();
+
+  ThreadsExec this_thread;
+
+  while (ThreadsExec::Active == this_thread.m_pool_state) {
+    (*s_current_function)(this_thread, s_current_function_arg);
+
+    // Deactivate thread and wait for reactivation
+    this_thread.m_pool_state = ThreadsExec::Inactive;
+
+    wait_yield(this_thread.m_pool_state, ThreadsExec::Inactive);
+  }
+}
+
+void ThreadsExec::wait_yield(volatile int &flag, const int value) {
+  while (value == flag) {
+    std::this_thread::yield();
+  }
+}
 ```
+注意到在`ThreadsExec::inititalize()`中执行了`ThreadsExec::spawn()`函数，该函数产生了一个新的线程，该线程实际运行`ThreadsExec::driver()`函数。
+
+而在`driver()`函数中，首先定义了一个局部变量`ThreadsExec this_thread`,便进入了一个`while`循环中。
+
+这里的重点时`ThreadsExec`的默认构造函数，其区分了主线程如何构造，和子线程如何构造：
+
+```cpp
+ThreadsExec::ThreadsExec()
+    : m_pool_base(nullptr),
+      m_scratch(nullptr),
+      m_scratch_reduce_end(0),
+      m_scratch_thread_end(0),
+      m_numa_rank(0),
+      m_numa_core_rank(0),
+      m_pool_rank(0),
+      m_pool_size(0),
+      m_pool_fan_size(0),
+      m_pool_state(ThreadsExec::Terminating) {
+  // 通过全局变量来区分是否是子线程构造的
+  if (&s_threads_process != this) {
+    // A spawned thread
+
+    ThreadsExec *const nil = nullptr;
+
+    // Which entry in 's_threads_exec', possibly determined from hwloc binding
+    const int entry = reinterpret_cast<size_t>(s_current_function_arg) <
+                              size_t(s_thread_pool_size[0])
+                          ? reinterpret_cast<size_t>(s_current_function_arg)
+                          : size_t(Kokkos::hwloc::bind_this_thread(
+                                s_thread_pool_size[0], s_threads_coord));
+
+    // Given a good entry set this thread in the 's_threads_exec' array
+    if (entry < s_thread_pool_size[0] &&
+        nil == atomic_compare_exchange(s_threads_exec + entry, nil, this)) {
+      const std::pair<unsigned, unsigned> coord =
+          Kokkos::hwloc::get_this_thread_coordinate();
+
+      // 设置各种rank和状态
+      m_numa_rank      = coord.first;
+      m_numa_core_rank = coord.second;
+      m_pool_base      = s_threads_exec;
+      m_pool_rank      = s_thread_pool_size[0] - (entry + 1);
+      m_pool_rank_rev  = s_thread_pool_size[0] - (pool_rank() + 1);
+      m_pool_size      = s_thread_pool_size[0];
+      m_pool_fan_size  = fan_size(m_pool_rank, m_pool_size);
+      // 注意构造成功后其状态被设置为了Active，即运行态
+      m_pool_state     = ThreadsExec::Active;
+
+      s_threads_pid[m_pool_rank] = std::this_thread::get_id();
+
+      // Inform spawning process that the threads_exec entry has been set.
+      // 而将主线程的状态也设置为了运行态
+      s_threads_process.m_pool_state = ThreadsExec::Active;
+    } else {
+      // Inform spawning process that the threads_exec entry could not be set.
+      s_threads_process.m_pool_state = ThreadsExec::Terminating;
+    }
+  } else {
+    // Enables 'parallel_for' to execute on unitialized Threads device
+    m_pool_rank  = 0;
+    m_pool_size  = 1;
+    m_pool_state = ThreadsExec::Inactive;
+
+    s_threads_pid[m_pool_rank] = std::this_thread::get_id();
+  }
+}
+```
+
+再看`driver()`函数：
+```cpp
+void ThreadsExec::driver() {
+  SharedAllocationRecord<void, void>::tracking_enable();
+
+  ThreadsExec this_thread;
+
+  // 若处于Active状态则执行一次s_current_function函数
+  // 若是其他状态则直接退出线程结束
+  while (ThreadsExec::Active == this_thread.m_pool_state) {
+    (*s_current_function)(this_thread, s_current_function_arg);
+
+    // Deactivate thread and wait for reactivation
+    this_thread.m_pool_state = ThreadsExec::Inactive;
+
+    // 若m_pool_state一直处于Inactive，则该线程会一直yield让出执行权,让其他线程运行
+    wait_yield(this_thread.m_pool_state, ThreadsExec::Inactive);
+  }
+}
+```
+
+由于在`ThreadsExec::initialize()`中执行`spawn()`函数之前将`s_current_func`设置为了一个空函数，故`driver()`函数会一直在`wait_yield`中循环，直到`ThreadExec::m_pool_state`变化。
+
+好了，现在继续回到`ThreadExec::initialize()`中继续执行：
+```cpp
+void ThreadsExec::initialize(int thread_count){
+  ......
+  if (!is_initialized) {
+    ......
+    for (unsigned ith = thread_spawn_begin; ith < thread_count; ++ith) {
+      s_threads_process.m_pool_state = ThreadsExec::Inactive;
+
+      // If hwloc available then spawned thread will
+      // choose its own entry in 's_threads_coord'
+      // otherwise specify the entry.
+      s_current_function_arg =
+          reinterpret_cast<void *>(hwloc_can_bind ? ~0u : ith);
+
+      // Make sure all outstanding memory writes are complete before spawning the new thread.
+      memory_fence();
+
+      // Spawn thread executing the 'driver()' function.
+      // Wait until spawned thread has attempted to initialize.
+      // If spawning and initialization is successful then
+      // an entry in 's_threads_exec' will be assigned.
+      // 在此处生成新线程
+      // 这里直接展开了spawn函数
+      ThreadsExec::spawn();{
+          std::thread t(internal_cppthread_driver);
+          t.detach();
+      }
+      // 在spawn线程后，主线程陷入yield循环中
+      // 直到刚才spawn的子线程，设置主线程为`Activate`状态，则返回
+      // 继续生成下一个循环
+      wait_yield(s_threads_process.m_pool_state, ThreadsExec::Inactive);
+      // spawn的线程如果出错，则终止分配
+      if (s_threads_process.m_pool_state == ThreadsExec::Terminating) break;
+    }
+
+    ......
+
+    // 此时所有的子线程应该都处于wait_yield(m_pool_state, Inactive)循环中
+    // 此时设置s_current_func是安全的
+    s_current_function             = nullptr;
+    s_current_function_arg         = nullptr;
+    s_threads_process.m_pool_state = ThreadsExec::Inactive;
+
+    // 当然或许由于地层的乱序执行(或许编译器也会交换内存访问顺序)，Kokkos使用了大量的内存屏障
+    // desul实现的内存屏障
+    memory_fence();
+
+    ......
+  }
+```
+
+在`Kokkos::initialize()`完成执行后，已经生成了一个线程池。之后的`ParallelFor`只需要指定需要并行执行的函数，即设置`s_current_function`和`s_current_args`，然后在把所有的线程状态设置为`Active`，则每个线程都会使用自己定义的`ThreadExec this_thread`调用`s_cuurent_function`函数。
+```cpp
+driver(){
+    ......
+    while(...){
+        ......
+        (*s_current_function)(this_thread, s_current_function_arg);
+        .....
+    }
+    ......
+}
+```
+
+终于初始化完成了，现在可以来看`HelloWorld`代码中的`parallel_for`函数了，上面已经分析过了，该函数实际生成了一个对应到`RangePolicy`和`Threads`的`ParallelFor`对象，并执行了其`execute()`函数。
+
+```cpp
+inline void ParallelFor::execute() const {
+    ThreadsExec::start(&ParallelFor::exec, this);
+    ThreadsExec::fence();
+}
+```
+
+可以看到其执行了`ThreadsExec`的两个静态函数，在执行`start`时将`exec`函数和当前`ParallelFor`对象传递了进去。
+
+应该可以猜到了，该`Threads::start`函数就是负责将`exec`函数设置为`s_current_function`，将`this`设置为`s_current_args`，并设置所有线程状态为`Active`开始并行执行:
+
+```cpp
+/** \brief  Begin execution of the asynchronous functor */
+void ThreadsExec::start(void (*func)(ThreadsExec &, const void *),
+                        const void *arg) {
+  // 验证当前是否为主线程，true表示还需要验证是否执行了初始化，Kokkos::initialize间接初始化了ThreadsExec相关的变量
+  verify_is_process("ThreadsExec::start", true);
+
+  if (s_current_function || s_current_function_arg) {
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("ThreadsExec::start() FAILED : already executing"));
+  }
+
+  s_current_function     = func;
+  s_current_function_arg = arg;
+
+  // Make sure function and arguments are written before activating threads.
+  memory_fence();
+
+  // Activate threads:
+  for (int i = s_thread_pool_size[0]; 0 < i--;) {
+    s_threads_exec[i]->m_pool_state = ThreadsExec::Active;
+  }
+
+  if (s_threads_process.m_pool_size) {
+    // Master process is the root thread, run it:
+    (*func)(s_threads_process, arg);
+    s_threads_process.m_pool_state = ThreadsExec::Inactive;
+  }
+}
+```
+
+就实际的`RangePolicy`并行执行，现在就只剩最后一个问题了，`ParallelFor<Functor, RangePolicy, Threads>::exec`，该函数是怎样的，为何所有的线程都执行他就能实现对一个一维空间的并行执行。
+
+```cpp
+  // 经列出了带Tag的特化模板
+  template <class TagType>
+  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+      const FunctorType &functor, const Member ibeg, const Member iend) {
+    const TagType t{};
+    for (Member i = ibeg; i < iend; ++i) {
+      functor(t, i);
+    }
+  }
+
+  static void exec(ThreadsExec &exec, const void *arg) {
+    // 实际执行exec_schedule
+    exec_schedule<typename Policy::schedule_type::type>(exec, arg);
+  }
+
+  // 仅列出了一个特化模板
+  template <class Schedule>
+  static std::enable_if_t<std::is_same<Schedule, Kokkos::Static>::value>
+  exec_schedule(ThreadsExec &exec, const void *arg) {
+    const ParallelFor &self = *((const ParallelFor *)arg);
+
+    // WorkRange是RangePolicy的一个内部类
+    WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
+
+    ParallelFor::template exec_range<WorkTag>(self.m_functor, range.begin(),
+                                              range.end());
+
+    exec.fan_in();
+  }
+```
+
+经过分析可以知道，`exec`内部使用使用了`WorkRange`来分别执行不同部分。最初我们给`RangePolicy`指定一个范围如`[100, 10000]`，而`WorkRange`对象利用当前线程的`pool_rank`和`pool_size`,来计算每个线程负责`[100, 100000]`中的哪个范围。最后在通过`for`循环来执行该子范围，从里实现了每个线程并行执行一部分范围。
+
+
+> 注意`ParallelFor::execute()`中在执行完`start`函数后，还执行了一个`ThreadsExec::fence`来等待所有的线程执行完成。所以，即使一个`parallefor()`后再跟一个`parallelfor`，并不会并行，而是一个一个执行。
