@@ -96,3 +96,4 @@ constexpr int get_v(){
 // 如此一来编译器就知道了该像对待常量一样深入分析该函数是否是常量
 static const int a = 1 + get_v();
 ```
+
