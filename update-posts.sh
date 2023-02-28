@@ -1,5 +1,24 @@
 #!/bin/bash
 # to move original markdown file to _posts dir respectively
+anchor_file="time-anchor"
+
+if [ -n "$1" ];then
+    if [ "$1" = "clean" ];then
+        all_posts=`find . -name "_posts" -type d`
+        old_IFS=$IFS
+        IFS=$'\n'
+        for posts in ${all_posts};do
+            /usr/bin/rm -fr "$posts"
+            echo "deleted ${posts}"
+        done
+        IFS=$old_IFS
+        /usr/bin/rm "$anchor_file"
+    else
+        echo -e "$0: err: usage: \n\t\tupdate-posts.sh [clean]" 
+        exit 1
+    fi
+    exit 0
+fi
 
 function get_file_change_time(){
     ls -l --time-style '+%Y-%m-%d %H:%M:%S' "$1" | awk '{print $6,$7}'
@@ -15,7 +34,6 @@ function get_file_change_timestamp(){
 }
 
 anchor_time=0
-anchor_file="time-anchor"
 if [ -f "${anchor_file}" ];then
     anchor_time=$(get_file_change_timestamp "${anchor_file}")
     echo "anchor time: " "$(get_file_change_time ${anchor_file})"
