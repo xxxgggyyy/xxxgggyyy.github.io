@@ -1,9 +1,9 @@
-title: Jekyll Serial Programmer
+title: xgy's personal blogs
 markdown: kramdown
 
 # for atom feed
 author:
-  name: Sharad Raj Singh Maurya
+  name: xxxgggyyy
   email: dev_sharad@outlook.com
 
 plugins:
@@ -19,8 +19,8 @@ plugins:
 
 defaults:
   - scope:
-      path: "_posts"
+      path: "*/_posts"
     values:
       layout: "post"
-      #      permalink: /posts/:title/
+      permalink: /:categories/:title:output_ext
 exclude: ["sitemap.xml", "feed.xml", "LICENSE", "README.md"]
