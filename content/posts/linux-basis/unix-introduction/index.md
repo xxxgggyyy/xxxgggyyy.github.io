@@ -2,7 +2,10 @@
 title: "UINIX简介与入门"
 date: 2022-06-19T15:16:48+08:00
 topics: "linux-basis"
-draft: true
+draft: false
+series: ["unix-unbounded"]
+series_order: 1
+summary: "unix系统简介和入门知识"
 ---
 
 # UNIX简介

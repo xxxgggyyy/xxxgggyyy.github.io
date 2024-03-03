@@ -2,7 +2,9 @@
 title: "UNIX文件系统操作"
 date: 2022-06-19T15:16:48+08:00
 topics: "linux-basis"
-draft: true
+series: ["unix-unbounded"]
+series_order: 2
+summary: "UNIX文件系统基本原理与简单使用"
 ---
 
 # UNIX文件系统简介
@@ -246,7 +248,7 @@ grep [option]... patterns [file]...
 `tar`指令可将多个文档归档（解开）为一个文件，此时并未进行压缩，只是为压缩提供了条件（因为有些压缩算法只支持对单个文件压缩如gzip）。
 > `tar`为了方便使用也提供了参数，在归档完成后可以立即进行压缩
 
-```
+```sh
 tar -cvf archive.tar file1 file2 dir
 tar -xvf archive.tar -C dest_dir
 # 对应加解档参数前添加需要的压缩算法参数即可

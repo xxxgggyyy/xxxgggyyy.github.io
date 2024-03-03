@@ -2,7 +2,9 @@
 title: "shell基础"
 date: 2022-06-19T15:16:48+08:00
 topics: "linux-basis"
-draft: true
+series: ["unix-unbounded"]
+series_order: 3
+summary: "shell脚本基础语法（不全）"
 ---
 
 # shell简介

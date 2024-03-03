@@ -5,9 +5,9 @@
 # Refer to the theme docs for more details about each of these parameters.
 # https://blowfish.page/docs/configuration/#theme-parameters
 
-# colorScheme = "blowfish"
-colorScheme = "noir"
-defaultAppearance = "light" # valid options: light or dark
+colorScheme = "blowfish"
+# colorScheme = "noir"
+defaultAppearance = "dark" # valid options: light or dark
 autoSwitchAppearance = true
 
 enableSearch = true
@@ -45,7 +45,7 @@ smartTOCHideUnfocusedChildren = false
   showMoreLinkDest = "/posts"
   cardView = false
   cardViewScreenWidth = false
-  layoutBackgroundBlur = false # only used when layout equals background
+  layoutBackgroundBlur = true # only used when layout equals background
 
 [article]
   showDate = true
@@ -63,10 +63,10 @@ smartTOCHideUnfocusedChildren = false
   showEdit = false
   # editURL = "https://github.com/username/repo/"
   editAppendPath = true
-  seriesOpened = true
+  seriesOpened = false
   showHeadingAnchors = true
   showPagination = true
-  invertPagination = false
+  invertPagination = true
   showReadingTime = true
   showTableOfContents = true
   showRelatedContent = true
@@ -89,7 +89,7 @@ smartTOCHideUnfocusedChildren = false
   showTableOfContents = false
   showCards = false
   groupByYear = true
-  cardView = true
+  cardView = false
   cardViewScreenWidth = false
   constrainItemsWidth = false
 
@@ -100,11 +100,18 @@ smartTOCHideUnfocusedChildren = false
   showTermCount = true
   showHero = false
   heroStyle = "background" # valid options: basic, big, background, thumbAndBackground
+  layoutBackgroundBlur = true # only used when heroStyle equals background or thumbAndBackground
+  layoutBackgroundHeaderSpace = true # only used when heroStyle equals background
   showBreadcrumbs = false
+  showSummary = true
   showViews = false
   showLikes = false
   showTableOfContents = false
+  showCards = false
+  groupByYear = true
   cardView = true
+  cardViewScreenWidth = false
+  constrainItemsWidth = false
 
 [term]
   showHero = false
