@@ -1,9 +1,12 @@
 ---
-title: "dp leetcode"
+title: "Leetcode - DP problems"
 date: 2024-01-10T19:47:50+08:00
 topics: "algorithms-and-data-structures"
-draft: true
+tags: ["algorithm", "ds", "leetcode", "dp"]
+summary: "leetcode中动态规划相关题目"
 ---
+
+{{< katex >}}
 
 # leetcode动态规划
 
@@ -17,7 +20,9 @@ draft: true
 
 ## || leetcode题目
 
-### [509.斐波那契数](https://leetcode.cn/problems/fibonacci-number/)
+### 509.斐波那契数
+
+<https://leetcode.cn/problems/fibonacci-number/>
 
 斐波那契数 （通常用 F(n) 表示）形成的序列称为 斐波那契数列 。该数列由 0 和 1 开始，后面的每一项数字都是前面两项数字的和。也就是：
 
@@ -51,7 +56,9 @@ public:
 1. 直接写出齐次线性方程通解
 2. 矩阵快速幂，就是写出矩阵递归形式，完了求$M^n$，就是个简单2分n的快速幂求乘法。
 
-### [70.爬梯子](https://leetcode.cn/problems/climbing-stairs/)
+### 70.爬梯子
+
+<https://leetcode.cn/problems/climbing-stairs/>
 
 假设你正在爬楼梯。需要 n 阶你才能到达楼顶。
 
@@ -85,7 +92,9 @@ public:
 };
 ```
 
-### [746. 使用最小花费爬楼梯](https://leetcode.cn/problems/min-cost-climbing-stairs/)
+### 746. 使用最小花费爬楼梯
+
+<https://leetcode.cn/problems/min-cost-climbing-stairs/>
 
 给你一个整数数组 cost ，其中 cost[i] 是从楼梯第 i 个台阶向上爬需要支付的费用。一旦你支付此费用，即可选择向上爬一个或者两个台阶。
 
@@ -125,7 +134,9 @@ public:
 };
 ```
 
-### [62. 不同路径](https://leetcode.cn/problems/unique-paths/)
+### 62. 不同路径
+
+<https://leetcode.cn/problems/unique-paths/>
 
 一个机器人位于一个 m x n 网格的左上角 （起始点在下图中标记为 “Start” ）。
 
@@ -161,7 +172,9 @@ public:
 
 > 求组合数注意溢出
 
-### [63. 不同路径 II](https://leetcode.cn/problems/unique-paths-ii/)
+### 63. 不同路径 II
+
+<https://leetcode.cn/problems/unique-paths-ii/>
 
 一个机器人位于一个 m x n 网格的左上角 （起始点在下图中标记为 “Start” ）。
 
@@ -224,7 +237,9 @@ public:
 
 > 另外第一次提交`int`溢出了改成`long long`通过
 
-### [343. 整数拆分](https://leetcode.cn/problems/integer-break/)
+### 343. 整数拆分
+
+<https://leetcode.cn/problems/integer-break/>
 
 给定一个正整数 n ，将其拆分为 k 个 正整数 的和（ k >= 2 ），并使这些整数的乘积最大化。
 
@@ -339,7 +354,9 @@ public:
 };
 ```
 
-### [96.不同的二叉搜索树](https://leetcode.cn/problems/unique-binary-search-trees/)
+### 96.不同的二叉搜索树
+
+<https://leetcode.cn/problems/unique-binary-search-trees/>
 
 给你一个整数 n ，求恰由 n 个节点组成且节点值从 1 到 n 互不相同的**二叉搜索树**有多少种？返回满足题意的二叉搜索树的种数。
 
@@ -379,7 +396,9 @@ public:
 
 我想说的是，关于`n`个数字按顺序入栈有多少种出栈顺序，虽然知道结果是卡特兰数但一直不知道怎么来的。那么这里这种递归（动态规划）可以认为是一种做法。和这里一样，但root根就是以某个数出栈来算了(前面的是出栈顺序和后面的出栈顺序)。
 
-### [416. 分割等和子集](https://leetcode.cn/problems/partition-equal-subset-sum/)
+### 416. 分割等和子集
+
+<https://leetcode.cn/problems/partition-equal-subset-sum/>
 
 给你一个 只包含正整数 的 非空 数组 nums 。请你判断是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。
 
@@ -466,7 +485,9 @@ public:
 };
 ```
 
-### [1049. 最后一块石头的重量 II](https://leetcode.cn/problems/last-stone-weight-ii/)
+### 1049. 最后一块石头的重量 II
+
+<https://leetcode.cn/problems/last-stone-weight-ii/>
 
 有一堆石头，用整数数组 stones 表示。其中 stones[i] 表示第 i 块石头的重量。
 
@@ -505,7 +526,9 @@ public:
 };
 ```
 
-### [494. 目标和](https://leetcode.cn/problems/target-sum)
+### 494. 目标和
+
+<https://leetcode.cn/problems/target-sum>
 
 给你一个非负整数数组 nums 和一个整数 target 。
 
@@ -606,7 +629,9 @@ public:
 
 比如如果数组为`[0, 1], target =1`，那么其实有两种`1`和`0, 1`，所以必须要算前面这种不选的情况，然后递推自动累加。
 
-### [474.一和零](https://leetcode.cn/problems/ones-and-zeroes/)
+### 474.一和零
+
+<https://leetcode.cn/problems/ones-and-zeroes/>
 
 给你一个二进制字符串数组 strs 和两个整数 m 和 n 。
 
@@ -662,7 +687,9 @@ $$
 > 网上有什么先写出`dp[i][t] = max(dp[i-1][t], dp[i-1][t-w[i]] + v[i] +......+ dp[i-1][t-n*w[i]] + n*v[i])`
 > 然后再去推导出这里我写的这个公式，不能说有问题吧。只是做题写递推式还要推导转道弯，确实也太麻烦了
 
-### [518. 零钱兑换 II](https://leetcode.cn/problems/coin-change-ii)
+### 518. 零钱兑换 II
+
+<https://leetcode.cn/problems/coin-change-ii>
 
 给你一个整数数组 coins 表示不同面额的硬币，另给一个整数 amount 表示总金额。
 
@@ -696,7 +723,9 @@ public:
 
 所以这里必须从前往后遍历，这样`dp[t]`还是前一次的，但小于`t`的已经是这一次的值了。
 
-### [377. 组合总和 Ⅳ](https://leetcode.cn/problems/combination-sum-iv)
+### 377. 组合总和 Ⅳ
+
+<https://leetcode.cn/problems/combination-sum-iv>
 
 给你一个由 不同 整数组成的数组 nums ，和一个目标整数 target 。请你从 nums 中找出并返回总和为 target 的元素组合的个数。
 
@@ -812,7 +841,9 @@ public:
     }
 };
 ```
-### [322. 零钱兑换](https://leetcode.cn/problems/coin-change)
+### 322. 零钱兑换
+
+<https://leetcode.cn/problems/coin-change>
 
 给你一个整数数组 coins ，表示不同面额的硬币；以及一个整数 amount ，表示总金额。
 
@@ -843,7 +874,9 @@ public:
 
 这里求最小的值，需要使用`INT_MAX`作为初始值。
 
-### [279.完全平方数](https://leetcode.cn/problems/perfect-squares)
+### 279.完全平方数
+
+<https://leetcode.cn/problems/perfect-squares>
 
 给你一个整数 n ，返回 和为 n 的完全平方数的最少数量 。
 
@@ -872,7 +905,9 @@ public:
     }
 };
 ```
-### [139. 单词拆分](https://leetcode.cn/problems/word-break)
+### 139. 单词拆分
+
+<https://leetcode.cn/problems/word-break>
 
 给你一个字符串 s 和一个字符串列表 wordDict 作为字典。如果可以利用字典中出现的一个或多个单词拼接出 s 则返回 true。
 
@@ -945,7 +980,9 @@ public:
 
 如果使用字典树，内层循环就变成固定的`O(n)`了。这里内层是`O(n^2)`，因为`substr()`还要消耗`O(n)`
 
-### [198. 打家劫舍](https://leetcode.cn/problems/house-robber)
+### 198. 打家劫舍
+
+<https://leetcode.cn/problems/house-robber>
 
 你是一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响你偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
 
@@ -968,7 +1005,9 @@ public:
     }
 };
 ```
-### [213.打家劫舍II](https://leetcode.cn/problems/house-robber-ii/)
+### 213.打家劫舍II
+
+<https://leetcode.cn/problems/house-robber-ii/>
 
 你是一个专业的小偷，计划偷窃沿街的房屋，每间房内都藏有一定的现金。这个地方所有的房屋都 围成一圈 ，这意味着第一个房屋和最后一个房屋是紧挨着的。同时，相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警 。
 
@@ -1009,7 +1048,9 @@ public:
 };
 ```
 
-### [337.打家劫舍 III](https://leetcode.cn/problems/house-robber-iii/)
+### 337.打家劫舍 III
+
+<https://leetcode.cn/problems/house-robber-iii/>
 
 小偷又发现了一个新的可行窃的地区。这个地区只有一个入口，我们称之为 root 。
 
@@ -1068,7 +1109,9 @@ public:
 ```
 
 
-### [647. 回文子串](https://leetcode.cn/problems/palindromic-substrings/)
+### 647. 回文子串
+
+<https://leetcode.cn/problems/palindromic-substrings/>
 
 给你一个字符串 s ，请你统计并返回这个字符串中 回文子串 的数目。
 
@@ -1151,7 +1194,9 @@ public:
 };
 ```
 
-### [516.最长回文子序列](https://leetcode.cn/problems/longest-palindromic-subsequence/)
+### 516.最长回文子序列
+
+<https://leetcode.cn/problems/longest-palindromic-subsequence/>
 
 给你一个字符串 s ，找出其中最长的回文子序列，并返回该序列的长度。
 
@@ -1209,7 +1254,9 @@ public:
 };
 ```
 
-### [5. 最长回文子串](https://leetcode.cn/problems/longest-palindromic-substring)
+### 5. 最长回文子串
+
+<https://leetcode.cn/problems/longest-palindromic-substring>
 
 给你一个字符串 s，找到 s 中最长的回文子串。
 
@@ -1250,7 +1297,9 @@ public:
 };
 ```
 
-### [121. 买卖股票的最佳时机](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
+### 121. 买卖股票的最佳时机
+
+<https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/>
 
 给定一个数组 prices ，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。
 

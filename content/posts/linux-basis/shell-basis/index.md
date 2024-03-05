@@ -5,6 +5,7 @@ topics: "linux-basis"
 series: ["unix-unbounded"]
 series_order: 3
 summary: "shell脚本基础语法（不全）"
+tags: ["linux"]
 ---
 
 # shell简介

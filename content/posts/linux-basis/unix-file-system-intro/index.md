@@ -5,6 +5,7 @@ topics: "linux-basis"
 series: ["unix-unbounded"]
 series_order: 2
 summary: "UNIX文件系统基本原理与简单使用"
+tags: ["linux"]
 ---
 
 # UNIX文件系统简介

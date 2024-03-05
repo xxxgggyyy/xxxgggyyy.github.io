@@ -6,6 +6,7 @@ draft: false
 series: ["unix-unbounded"]
 series_order: 1
 summary: "unix系统简介和入门知识"
+tags: ["linux"]
 ---
 
 # UNIX简介
