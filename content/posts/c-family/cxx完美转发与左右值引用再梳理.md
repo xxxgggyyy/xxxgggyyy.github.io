@@ -2,7 +2,8 @@
 title: "cxx完美转发与左右值引用再梳理"
 date: 2023-02-26T21:06:38+08:00
 topics: "c-family"
-draft: true
+draft: false
+summary: "c++左右值与完美转发"
 ---
 
 > 由于初学C++时CXX11标准还未大量使用，大量的新特性断断续续的被学习
