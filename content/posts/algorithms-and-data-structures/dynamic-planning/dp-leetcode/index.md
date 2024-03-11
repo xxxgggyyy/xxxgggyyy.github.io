@@ -1418,3 +1418,114 @@ public:
 ```
 
 这里取了个巧去处理`prices`最后一段是上坡的情况，`prices.push_back(-1)`保证最后一定是下降的。
+
+### 300. 最长递增子序列
+
+<https://leetcode.cn/problems/longest-increasing-subsequence>
+
+给你一个整数数组 nums ，找到其中最长严格递增子序列的长度。
+
+子序列 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，[3,6,2,7] 是数组 [0,3,1,6,2,2,7] 的
+子序列
+。
+
+*题解*
+
+第一个解法是经典动态规划：设`dp[i]`为以`s[i]`结尾的最长严格递增子序列的长度。
+
+转移方程为：
+
+$$
+dp[n] = max_{0<=i<=n-1,dp[i]>dp[n]}(dp[i]) + 1
+$$
+
+比较简单，代码如下：
+
+```cpp
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        vector<int> dp(nums.size(), 1);
+        int ret = 1;
+        for(int i = 1;i < nums.size();i++){
+            for(int j = 0;j < i;j++){
+                if(nums[i] > nums[j]){
+                    dp[i] = max(dp[i], dp[j] + 1);
+                }
+            }
+            if(dp[i] > ret) ret = dp[i];
+        }
+        return ret;
+    }
+};
+```
+
+但其复杂度为O(n^2)
+
+第二种解法，通过维护数组`d[i]`和`len`的合法性来找。
+
+这本质上是一种贪心算法，`d[i]`表示长度为i的所有子序列中末尾最小的那个子序列的末尾，而且显而易见`d`数组是严格递增的。
+
+而`len`则表示`d`数组的长度。
+
+所以最开始`len = 1`, `d[1]=nums[0]`，这显然是合法的。
+
+然后从`1`开始扫描`nums`数组，并不断维护`d`和`len`的合法性，最终`len`就是结果。
+
+比如遍历到`i`时，`d`和`len`表示此时`0~i-1`中子序列的情况，此时如果`nums[i] > d[len]`则表示可以新增一个更长的子序列`len++, d[len]=nums[i]`
+
+如果`nums[i] < d[len]`，那么没有更长的子序列可以新增，要表示`0~i`的情况，需要维护`d`的合理性，则二分去找`d`中第一个比`nums[i]`小的。
+
+### 236. 二叉树的最近公共祖先
+
+<https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-tree>
+
+给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
+
+百度百科中最近公共祖先的定义为：“对于有根树 T 的两个节点 p、q，最近公共祖先表示为一个节点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（一个节点也可以是它自己的祖先）。”
+
+*题解*
+
+这是道经典题了，做法很多，这里我选择后序的深度优先遍历。
+
+```cpp
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        dfs(root, p, q);
+        return ret;
+    }
+
+    TreeNode* ret = nullptr;
+
+    int dfs(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (root == nullptr) {
+            return 0;
+        }
+        if (ret != nullptr) {
+            return 0;
+        }
+        int cnt = 0;
+        cnt = dfs(root->left, p, q);
+        cnt += dfs(root->right, p, q);
+        if (root == p || root == q) {
+            cnt++;
+        }
+        if (cnt == 2) {
+            if(ret == nullptr) ret = root;
+        }
+        return cnt;
+    }
+};
+```
+
+其实用`cnt`统计有点多余，直接让`dfs`左右子树返回是否存在即可判断。
