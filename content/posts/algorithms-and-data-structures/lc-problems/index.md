@@ -277,3 +277,100 @@ public:
 但似乎测试用例中有一个非常奇怪的用例，如果选择`nums[s]`为pivot会导致时间复杂度退化，导致非常耗时。
 
 所以，可以其他的pivot选择策略，比如三值取中。
+
+### 27. 移除元素
+
+<https://leetcode.cn/problems/remove-element>
+
+给你一个数组 nums 和一个值 val，你需要 原地 移除所有数值等于 val 的元素，并返回移除后数组的新长度。
+
+不要使用额外的数组空间，你必须仅使用 O(1) 额外空间并 原地 修改输入数组。
+
+元素的顺序可以改变。你不需要考虑数组中超出新长度后面的元素。
+
+*题目*
+
+由于元素顺序可以改变，所以可以很快，直接用尾部的去填写就可以了。
+
+```cpp
+class Solution {
+public:
+    int removeElement(vector<int>& nums, int val) {
+        int tail = nums.size() - 1;
+        for(int i = 0; i < nums.size() && i <= tail; i++){
+            if(nums[i] == val){
+                while(nums[tail] == val && tail > i){
+                    tail--;
+                }
+                nums[i] = nums[tail--];
+            }
+        }
+        return tail + 1;
+    }
+};
+```
+
+### 26. 删除有序数组中的重复项
+
+<https://leetcode.cn/problems/remove-duplicates-from-sorted-array>
+
+给你一个 非严格递增排列 的数组 nums ，请你 原地 删除重复出现的元素，使每个元素 只出现一次 ，返回删除后数组的新长度。元素的 相对顺序 应该保持 一致 。然后返回 nums 中唯一元素的个数。
+
+考虑 nums 的唯一元素的数量为 k ，你需要做以下事情确保你的题解可以被通过：
+
+更改数组 nums ，使 nums 的前 k 个元素包含唯一元素，并按照它们最初在 nums 中出现的顺序排列。nums 的其余元素与 nums 的大小不重要。
+返回 k
+
+*题解*
+
+注意到数组本身是排序的，所以就很简单了。
+
+```cpp
+class Solution {
+public:
+    int removeDuplicates(vector<int>& nums) {
+        int val = nums[0], head = 1;
+        for(int i = 1; i < nums.size(); i++){
+            if(nums[i] != val){
+                nums[head++] = nums[i];
+                val = nums[i];
+            }
+        }
+        return head;
+    }
+};
+```
+
+### 80. 删除有序数组中的重复项 II
+
+<https://leetcode.cn/problems/remove-duplicates-from-sorted-array-ii>
+
+给你一个有序数组 nums ，请你 原地 删除重复出现的元素，使得出现次数超过两次的元素只出现两次 ，返回删除后数组的新长度。
+
+不要使用额外的数组空间，你必须在 原地 修改输入数组 并在使用 O(1) 额外空间的条件下完成。
+
+*题解*
+
+才做完上一题，解法完全相同。
+
+```cpp
+class Solution {
+public:
+    int removeDuplicates(vector<int>& nums) {
+        int val = nums[0], head = 1;
+        if(nums.size() > 1 && val == nums[1]){
+            head++;
+        }
+        for(int i = head; i < nums.size(); i++){
+            if(nums[i] != val){
+                nums[head++] = nums[i];
+                val = nums[i];
+                if(i+1 < nums.size() && nums[i+1] == val){
+                    nums[head++] = nums[i];
+                }
+            }
+        }
+        return head;
+    }
+};
+```
