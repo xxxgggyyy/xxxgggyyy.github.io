@@ -1128,7 +1128,7 @@ public:
 $$
 dp[i][j] =
 \begin{cases}
-dp[i+1][j-1], s[i+1] == j[j-1]\\
+dp[i+1][j-1], s[i+1] == j[j-1] \\
 false, s[i-1] \neq j[j-1] \\
 \end{cases} \\
 $$
@@ -1210,7 +1210,7 @@ $$
 dp[i][j] =
 \begin{cases}
 dp[i+1][j-1] + 2, s[i-1] == s[j-1] \\
-\max(dp[i+1][j], dp[i][j-1]), s[i-1] \neq s[j-1]
+\max(dp[i+1][j], dp[i][j-1]), s[i-1] \neq s[j-1] \\
 \end{cases}
 $$
 

@@ -13,7 +13,7 @@ summary: "随机做的leetcode题目"
 
 ## 438. 找到字符串中所有字母异位词
 
-<https://leetcode.cn/problems/find-all-anagrams-in-a-string)>
+<https://leetcode.cn/problems/find-all-anagrams-in-a-string>
 
 给定两个字符串 s 和 p，找到 s 中所有 p 的 异位词 的子串，返回这些子串的起始索引。不考虑答案输出的顺序。
 
@@ -137,7 +137,7 @@ public:
 
 ## 448. 找到所有数组中消失的数字
 
-<https://leetcode.cn/problems/find-all-numbers-disappeared-in-an-array)>
+<https://leetcode.cn/problems/find-all-numbers-disappeared-in-an-array>
 
 给你一个含 n 个整数的数组 nums ，其中 nums[i] 在区间 [1, n] 内。请你找出所有在 [1, n] 范围内但没有出现在 nums 中的数字，并以数组的形式返回结果。
 
@@ -173,7 +173,7 @@ public:
 
 ## 461. 汉明距离
 
-<https://leetcode.cn/problems/hamming-distance)>
+<https://leetcode.cn/problems/hamming-distance>
 
 两个整数之间的 汉明距离 指的是这两个数字对应二进制位不同的位置的数目。
 
@@ -371,6 +371,201 @@ public:
             }
         }
         return head;
+    }
+};
+```
+
+### 189. 轮转数组
+
+<https://leetcode.cn/problems/rotate-array>
+
+给定一个整数数组 nums，将数组中的元素向右轮转 k 个位置，其中 k 是非负数。
+
+*题解*
+
+看似很简单，如果要求使用原地数组，且时间复杂度为O(n)则显得麻烦。
+
+这里使用三段反转的方式。向右移动`k`则和`k mod n`是一样的，故一定是`k mod n`个末尾字段到了数组头，数组前面的到了数组尾部。
+
+```cpp
+class Solution {
+public:
+    void rotate(vector<int>& nums, int k) {
+        int real_k = k % nums.size();
+        if(real_k == 0) return;
+        reverse(nums.begin(), nums.end());
+        reverse(nums.begin(), nums.begin() + real_k);
+        reverse(nums.begin() + real_k, nums.end());
+    }
+};
+```
+
+到这里都很简单。但还有一种循环替代法，这种也是比较直观的做法。
+
+但证明非常麻烦
+
+> 没证出来:(
+
+假设从`nums[0]`开始直接往最终位置放，放了之后的那个位置再往它的最终位置。
+
+设`real_k = k mod n`，那么`nums[0]`回到自身时，一定是`real_k`和`n`的最小公倍数`s`，则有`s/real_k`表示一轮确定的数量。
+
+`n / (s/real_k)`为需要迭代的轮次即`real_k`和`n`的最大公约数。
+
+### 274. H 指数
+
+<https://leetcode.cn/problems/h-index>
+
+给你一个整数数组 citations ，其中 citations[i] 表示研究者的第 i 篇论文被引用的次数。计算并返回该研究者的 h 指数。
+
+根据维基百科上 h 指数的定义：h 代表“高引用次数” ，一名科研人员的 h 指数 是指他（她）至少发表了 h 篇论文，并且 至少 有 h 篇论文被引用次数大于等于 h 。如果 h 有多种可能的值，h 指数 是其中最 大的那个。
+
+*题解*
+
+最简单的做法，即先排序再找。
+
+```cpp
+class Solution {
+public:
+    int hIndex(vector<int>& citations) {
+        sort(citations.begin(), citations.end(), greater<int>());
+        int i = 1;
+        for(; i <= citations.size(); i++){
+            if(citations[i-1] < i){
+                break;
+            }
+        }
+        return i - 1;
+    }
+};
+```
+
+官方题解中，有种方法是O(n)，即先维持一个计数器数组`counter[n]`，直接看代码。
+
+```cpp
+class Solution {
+public:
+    int hIndex(vector<int>& citations) {
+        int n = citations.size(), tot = 0;
+        vector<int> counter(n + 1);
+        for (int i = 0; i < n; i++) {
+            if (citations[i] >= n) {
+                counter[n]++;
+            } else {
+                counter[citations[i]]++;
+            }
+        }
+        for (int i = n; i >= 0; i--) {
+            tot += counter[i];
+            if (tot >= i) {
+                return i;
+            }
+        }
+        return 0;
+    }
+};
+```
+
+### 380. O(1) 时间插入、删除和获取随机元素
+
+<https://leetcode.cn/problems/insert-delete-getrandom-o1>
+
+实现RandomizedSet 类：
+
+RandomizedSet() 初始化 RandomizedSet 对象
+bool insert(int val) 当元素 val 不存在时，向集合中插入该项，并返回 true ；否则，返回 false 。
+bool remove(int val) 当元素 val 存在时，从集合中移除该项，并返回 true ；否则，返回 false 。
+int getRandom() 随机返回现有集合中的一项（测试用例保证调用此方法时集合中至少存在一个元素）。每个元素应该有 相同的概率 被返回。
+你必须实现类的所有函数，并满足每个函数的 平均 时间复杂度为 O(1)
+
+*题目*
+
+这道题无趣得很，必须要用随机函数才行。另外这题的一些边界条件需要注意一下，比如删除的末尾的元素。
+
+```cpp
+class RandomizedSet {
+public:
+    unordered_map<int, int> mp;
+    vector<int> vec;
+    RandomizedSet(){
+        srand((unsigned)time(NULL));
+    }
+    
+    bool insert(int val) {
+        if(mp.count(val)){
+            return false;
+        }
+        vec.push_back(val);
+        mp[val] = vec.size() - 1;
+        return true;
+    }
+    
+    bool remove(int val) {
+        if(!mp.count(val)){
+            return false;
+        }
+        int inx = mp[val];
+        vec[inx] = vec.back();
+        mp[vec[inx]] = inx;
+        vec.pop_back();
+        mp.erase(val);
+
+        return true;
+    }
+    
+    int getRandom() {
+        return vec[rand()%vec.size()];
+    }
+};
+```
+
+### 12. 整数转罗马数字
+
+罗马数字包含以下七种字符： I， V， X， L，C，D 和 M。
+
+字符          数值
+I             1
+V             5
+X             10
+L             50
+C             100
+D             500
+M             1000
+例如， 罗马数字 2 写做 II ，即为两个并列的 1。12 写做 XII ，即为 X + II 。 27 写做  XXVII, 即为 XX + V + II 。
+
+通常情况下，罗马数字中小的数字在大的数字的右边。但也存在特例，例如 4 不写做 IIII，而是 IV。数字 1 在数字 5 的左边，所表示的数等于大数 5 减小数 1 得到的数值 4 。同样地，数字 9 表示为 IX。这个特殊的规则只适用于以下六种情况：
+
+I 可以放在 V (5) 和 X (10) 的左边，来表示 4 和 9。
+X 可以放在 L (50) 和 C (100) 的左边，来表示 40 和 90。 
+C 可以放在 D (500) 和 M (1000) 的左边，来表示 400 和 900。
+给你一个整数，将其转为罗马数字。
+
+*题解*
+
+直接按照基数来就行了：
+
+```cpp
+const pair<int, string> roman_radix[] = {
+    {1000, "M"}, {900, "CM"}, {500, "D"}, {400, "CD"}, {100, "C"},
+    {90, "XC"},  {50, "L"},   {40, "XL"}, {10, "X"},   {9, "IX"},
+    {5, "V"},    {4, "IV"},   {1, "I"}};
+
+class Solution {
+public:
+    string intToRoman(int num) {
+        string ret;
+        int radix = 0;
+        while(num > 0){
+            for(;radix < 13; radix++){
+                if(roman_radix[radix].first <= num)
+                    break;
+            }
+            while(num >= roman_radix[radix].first){
+                num -= roman_radix[radix].first;
+                ret.insert(ret.end(), roman_radix[radix].second.begin(), roman_radix[radix].second.end());
+            }
+        }
+        return ret;
     }
 };
 ```
