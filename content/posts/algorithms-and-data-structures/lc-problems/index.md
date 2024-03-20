@@ -569,3 +569,50 @@ public:
     }
 };
 ```
+
+### 134.加油站
+
+<https://leetcode.cn/problems/gas-station>
+
+在一条环路上有 n 个加油站，其中第 i 个加油站有汽油 gas[i] 升。
+
+你有一辆油箱容量无限的的汽车，从第 i 个加油站开往第 i+1 个加油站需要消耗汽油 cost[i] 升。你从其中的一个加油站出发，开始时油箱为空。
+
+给定两个整数数组 gas 和 cost ，如果你可以按顺序绕环路行驶一周，则返回出发时加油站的编号，否则返回 -1 。如果存在解，则 保证 它是 唯一 的
+
+*题解*
+
+最容易想到的是暴力做法，从每个点出发都去模拟一下，即到达每个点时都有`gas_sum >= cost_sum`，则一定可以走到下一个位置。但时间为O(n^2)，会超时。
+
+但可以观察到，如果从i点出发，走到j点时出现了`gas_sum < cost_sum`则无法走到j+1加油站，而由于在`i~j`之间的加油站都有`gas_sum >= cost_sum`
+
+所以从`i+1~j`的任意加油站出发都会在j点出现`gas_sum < cost_sum`故可以直接从j+1开始下一次模拟。时间复杂度下降到O(n)
+
+```cpp
+class Solution {
+public:
+    int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {
+        int gas_sum = 0, cost_sum = 0;
+        bool found = true;
+        for(int i = 0;i < gas.size(); ){
+            found = true;
+            gas_sum = cost_sum = 0;
+            for(int j = 0; j < gas.size(); j++){
+                int real_j = (i + j) % gas.size();
+                gas_sum += gas[real_j];
+                cost_sum += cost[real_j];
+                if(gas_sum < cost_sum){
+                    i = i + j + 1;
+                    found = false;
+                    break;
+                }
+            }
+            if(found){
+                return i;
+            }
+        }
+        return -1;
+    }
+};
+```
+
