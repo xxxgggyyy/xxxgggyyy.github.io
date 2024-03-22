@@ -11,7 +11,7 @@ summary: "随机做的leetcode题目"
 
 # Leetcode Problems
 
-## 438. 找到字符串中所有字母异位词
+### 438. 找到字符串中所有字母异位词
 
 <https://leetcode.cn/problems/find-all-anagrams-in-a-string>
 
@@ -135,7 +135,7 @@ public:
 };
 ```
 
-## 448. 找到所有数组中消失的数字
+### 448. 找到所有数组中消失的数字
 
 <https://leetcode.cn/problems/find-all-numbers-disappeared-in-an-array>
 
@@ -171,7 +171,7 @@ public:
 
 主要是要想到利用原地数组作为hash数组。对于复用原地数组的一个较好的方案不是想我这里去改成0，然后循环处理，而是可以存成负值。
 
-## 461. 汉明距离
+### 461. 汉明距离
 
 <https://leetcode.cn/problems/hamming-distance>
 
@@ -198,7 +198,7 @@ public:
 
 异或加移位统计即可。
 
-## 1400. 构造 K 个回文字符串
+### 1400. 构造 K 个回文字符串
 
 <https://leetcode.cn/problems/construct-k-palindrome-strings>
 
@@ -226,7 +226,7 @@ public:
 
 所以均成立。
 
-## 215. 数组中的第K个最大元素
+### 215. 数组中的第K个最大元素
 
 <https://leetcode.cn/problems/kth-largest-element-in-an-array>
 
@@ -616,3 +616,309 @@ public:
 };
 ```
 
+### 58.最后一个单词的长度
+
+<https://leetcode.cn/problems/length-of-last-word>
+
+给你一个字符串 s，由若干单词组成，单词前后用一些空格字符隔开。返回字符串中 最后一个 单词的长度。
+
+单词 是指仅由字母组成、不包含任何空格字符的最大
+子字符串
+子字符串
+子字符串 是字符串中连续的字符序列。
+
+*题解*
+
+简单题，注意边界条件。
+
+```cpp
+
+class Solution {
+public:
+  int lengthOfLastWord(string s) {
+    int end = -1;
+    for (int i = s.size() - 1; i >= 0; i--) {
+        if(s[i] != ' '){
+            end = i;
+            break;
+        }
+    }
+    for(int i = end - 1;i >= 0;i--){
+        if(s[i] == ' ')
+            return end - i;
+    }
+    return end + 1;
+  }
+};
+```
+
+### 28. 找出字符串中第一个匹配项的下标
+
+<https://leetcode.cn/problems/find-the-index-of-the-first-occurrence-in-a-string>
+
+给你两个字符串 haystack 和 needle ，请你在 haystack 字符串中找出 needle 字符串的第一个匹配项的下标（下标从 0 开始）。如果 needle 不是 haystack 的一部分，则返回  -1 。
+
+*题目*
+
+最优做法应该是使用KMP算法。
+
+```cpp
+class Solution {
+ public:
+  int strStr(string haystack, string needle) {
+    int i = 0, j = 0;
+    vector<int> next;
+    calcNext(next, needle);
+    while(i < (int)haystack.size() && j < (int)needle.size()){
+      if(j == -1 || haystack[i] == needle[j]){
+        i++;
+        j++;
+      }else{
+        j = next[j];
+      }
+    }
+    if(j == needle.size()){
+      return i - j;
+    }
+    return -1;
+  }
+
+  void calcNext(vector<int> &next, string &str) {
+    if (next.size() != str.size()) {
+      next.resize(str.size());
+    }
+    next[0] = -1;
+    int j = 1, k = -1;
+    while (j < str.size()) {
+      if (k == -1 || str[j - 1] == str[k]) {
+        next[j++] = ++k;
+      } else {
+        k = next[k];
+      }
+    }
+  }
+};
+```
+
+经典KMP实现。注意`-1 < (size_t)0`竟然是`false`，`int`被提升为了无符号的`size_t`而不是反过来。
+
+字符串匹配其实可以认为是比较经典的滑动窗口问题，滑动窗口的优化一般都是一次性可以多滑动一点，而不是+1.
+
+KMP的方案就是通过当某个字符匹配失败时，根据已知的信息确定一个最大滑动距离。
+
+这里最大滑动距离通过next数组来提供，`next[i]`含义是在`needle[0, i]`中不包含`needle[i]`时，从后往前匹配`needle`从前往后中的最大匹配长度。
+
+### 68.文本左右对齐
+
+<https://leetcode.cn/problems/text-justification>
+
+给定一个单词数组 words 和一个长度 maxWidth ，重新排版单词，使其成为每行恰好有 maxWidth 个字符，且左右两端对齐的文本。
+
+你应该使用 “贪心算法” 来放置给定的单词；也就是说，尽可能多地往每行中放置单词。必要时可用空格 ' ' 填充，使得每行恰好有 maxWidth 个字符。
+
+要求尽可能均匀分配单词间的空格数量。如果某一行单词间的空格不能均匀分配，则左侧放置的空格数要多于右侧的空格数。
+
+文本的最后一行应为左对齐，且单词之间不插入额外的空格。
+
+*题解*
+
+这题远远算不上难题吧。
+
+```cpp
+class Solution {
+ public:
+  vector<string> fullJustify(vector<string>& words, int maxWidth) {
+    vector<string> ret;
+    int i = 0, j = 0, n = words.size();
+    while (i < n) {
+      ret.push_back("");
+      string& line = ret.back();
+      line.reserve(maxWidth + 1);
+      int line_len = words[i].size();
+      int real_char_num = words[i].size();
+      for (j = i + 1; j < n; j++) {
+        line_len += words[j].size() + 1;
+        if (line_len > maxWidth) {
+          break;
+        }
+        real_char_num += words[j].size();
+      }
+
+      // last line, left justify
+      if (j == n) {
+        append_str(line, words[i]);
+        for (int s = i + 1; s < j; s++) {
+          line.push_back(' ');
+          append_str(line, words[s]);
+        }
+        if (line.size() < maxWidth) {
+          append_space(line, maxWidth - line.size());
+        }
+        break;
+      }
+
+      // only one word
+      if (j - i == 1) {
+        append_str(line, words[i]);
+        append_space(line, maxWidth - line.size());
+        i = j;
+        continue;
+      }
+
+      int evenly_space_num = (maxWidth - real_char_num) / (j - i - 1);
+      int remain = (maxWidth - real_char_num) % (j - i - 1);
+      append_str(line, words[i]);
+      for (int s = i + 1; s < j; s++) {
+        append_space(line, evenly_space_num);
+        if(remain > 0){
+          append_space(line, 1);
+          remain--;
+        }
+        append_str(line, words[s]);
+      }
+      i = j;
+    }
+    return ret;
+  }
+
+  void append_str(string& dst, string& str) {
+    dst.insert(dst.end(), str.begin(), str.end());
+  }
+
+  void append_space(string& dst, int num) {
+    for (int i = 0; i < num; i++) {
+      dst.push_back(' ');
+    }
+  }
+};
+```
+
+### 167.两数之和 II - 输入有序数组
+
+<https://leetcode.cn/problems/two-sum-ii-input-array-is-sorted>
+
+给你一个下标从 1 开始的整数数组 numbers ，该数组已按 非递减顺序排列  ，请你从数组中找出满足相加之和等于目标数 target 的两个数。如果设这两个数分别是 numbers[index1] 和 numbers[index2] ，则 1 <= index1 < index2 <= numbers.length 。
+
+以长度为 2 的整数数组 [index1, index2] 的形式返回这两个整数的下标 index1 和 index2。
+
+你可以假设每个输入 只对应唯一的答案 ，而且你 不可以 重复使用相同的元素。
+
+你所设计的解决方案必须只使用常量级的额外空间。
+
+*题解*
+
+能明显感觉到该题是被精心设计的。
+
+序列是非严格递增的，而两数之和一定是一大一小（或者相等），所以可以想到双指针遍历。
+
+而从左边确定一个`nums[i]`后，从右边往下找`tmp = target - nums[i]`即可，如果没找到则得到一个`nums[j] < tmp`，而`nums[i+1]`又更大，相比`nums[i]`的`tmp`，此时他的`tmp`一定更小，正好可以从`j`开始继续找，因为刚才找的大于`j`的有`nums[] > tmp1 > tmp2`
+
+直接看代码：
+
+```cpp
+class Solution {
+ public:
+  vector<int> twoSum(vector<int>& numbers, int target) {
+    int i = 0, j = numbers.size() - 1;
+    while (i < j) {
+      int tmp = target - numbers[i];
+      while(numbers[j] > tmp) j--;
+      if(numbers[j] == tmp){
+        return {i+1, j+1};
+      }
+      i++;
+    }
+    return {-1, -1};
+  }
+};
+```
+
+### 125.验证回文串
+
+<https://leetcode.cn/problems/valid-palindrome>
+
+如果在将所有大写字符转换为小写字符、并移除所有非字母数字字符之后，短语正着读和反着读都一样。则可以认为该短语是一个 回文串 。
+
+字母和数字都属于字母数字字符。
+
+给你一个字符串 s，如果它是 回文串 ，返回 true ；否则，返回 false 。
+
+*题解*
+
+```cpp
+class Solution {
+ public:
+  bool isPalindrome(string s) {
+    int n = s.size();
+    int j = n - 1, i = 0;
+    while(i <= j){
+      while(i < j && !is_ad(s[i])) i++;
+      while(j >= i && !is_ad(s[j])) j--;
+      if(i > j) break;
+      if(!ad_equal(s[i], s[j])){
+        return false;
+      }
+      j--;
+      i++;
+    }
+    return true;
+  }
+
+  static inline bool ad_equal(char a, char b){
+    if(a == b)
+      return true;
+    if(is_alpha(a) && is_alpha(b))
+      return abs(a - b) == abs('a' - 'A');
+    return false;
+  }
+
+  static inline bool is_digit(char c){
+    return c >= '0' && c <= '9';
+  }
+
+  static inline bool is_alpha(char c){
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+  }
+
+  static inline bool is_ad(char c){
+    return is_digit(c) || is_alpha(c);
+  }
+};
+```
+
+### 209.长度最小的子数组
+
+<https://leetcode.cn/problems/minimum-size-subarray-sum>
+
+给定一个含有 n 个正整数的数组和一个正整数 target 。
+
+找出该数组中满足其总和大于等于 target 的长度最小的 连续
+子数组
+ [numsl, numsl+1, ..., numsr-1, numsr] ，并返回其长度。如果不存在符合条件的子数组，返回 0 。
+
+*题解*
+
+类似滑动窗口，但不一样。还是双指针，设`i=0`，然后找到第一个`nums[i, j]`的和大于等于`target`，之后在增大`j`，检查`i`是否也可增大，
+
+通俗来说其实是找以某个`nums[i]`为末尾时，大于等于`target`的最小长度。
+
+```cpp
+class Solution {
+ public:
+  int minSubArrayLen(int target, vector<int>& nums) {
+    int i = 0, j = 0;
+    long long sum = 0;
+    int min_len = INT_MAX;
+    for (; j < nums.size(); j++) {
+      sum += nums[j];
+      if (sum < target) continue;
+      while (sum - nums[i] >= target) {
+        sum -= nums[i];
+        i++;
+      }
+      if (j - i + 1 < min_len) min_len = j - i + 1;
+    }
+    return min_len < INT_MAX? min_len : 0;
+  }
+};
+```
