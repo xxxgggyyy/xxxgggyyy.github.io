@@ -922,3 +922,81 @@ class Solution {
   }
 };
 ```
+
+### 30.串联所有单词的子串
+
+<https://leetcode.cn/problems/substring-with-concatenation-of-all-words>
+
+给定一个字符串 s 和一个字符串数组 words。 words 中所有字符串 长度相同。
+
+ s 中的 串联子串 是指一个包含  words 中所有字符串以任意顺序排列连接起来的子串。
+
+例如，如果 words = ["ab","cd","ef"]， 那么 "abcdef"， "abefcd"，"cdabef"， "cdefab"，"efabcd"， 和 "efcdab" 都是串联子串。 "acdbef" 不是串联子串，因为他不是任何 words 排列的连接。
+返回所有串联子串在 s 中的开始索引。你可以以 任意顺序 返回答案。
+
+*题解*
+
+这题也很容易想到滑动窗口。
+
+所以暴力解法就是每次滑动一个字符即可。但这样每次都必须清空之前窗口的统计信息，无法利用单词信息。
+
+所以干脆以单词长度为滑动单位，此时需要改变一下滑动方式，分别以`0~n-1`为起始点（n为一个单词的长度），以单词长度滑动。这样和一个字符一个字符滑动遍历到的窗口是一样的多的，只是换了个顺序，使其可以利用单词信息。
+
+代码如下：
+
+```cpp
+class Solution {
+public:
+    vector<int> findSubstring(string s, vector<string>& words) {
+        unordered_map<string, int> wordCount;
+        for(auto& w : words){
+            wordCount[w]++;
+        }
+        int wordLen = words[0].size();
+        int windowSize = words.size()*wordLen;
+        if(s.size() < windowSize){
+            return {};
+        }
+
+        vector<int> ans;
+        unordered_map<string, int> wordCountInWindow;
+        int i, j;
+        for(int first = 0; first < wordLen; first++){
+            i = j = first;
+            wordCountInWindow = wordCount;
+            while(j < s.size() && i < s.size()){
+                for(;j < i + windowSize; j += wordLen){
+                    string word = s.substr(j, wordLen);
+                    if(wordCountInWindow.count(word) == 0){
+                        wordCountInWindow = wordCount;
+                        i = j + wordLen;
+                        j = i;
+                        break;
+                    }
+                    wordCountInWindow[word]--;
+                    if(wordCountInWindow[word] < 0){
+                        while(true){
+                            string old_word = s.substr(i, wordLen);
+                            wordCountInWindow[old_word]++;
+                            i += wordLen;
+                            if(old_word == word){
+                                break;
+                            }
+                        }
+                        j += wordLen;
+                        break;
+                    }
+                }
+                if(j >= i + windowSize){
+                    ans.push_back(i);
+                    string old_word = s.substr(i, wordLen);
+                    wordCountInWindow[old_word]++;
+                    i += wordLen;
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
