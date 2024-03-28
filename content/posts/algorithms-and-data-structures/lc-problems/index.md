@@ -1000,3 +1000,253 @@ public:
 };
 ```
 
+### 289.生命游戏
+
+<https://leetcode.cn/problems/game-of-life>
+
+根据 百度百科 ， 生命游戏 ，简称为 生命 ，是英国数学家约翰·何顿·康威在 1970 年发明的细胞自动机。
+
+给定一个包含 m × n 个格子的面板，每一个格子都可以看成是一个细胞。每个细胞都具有一个初始状态： 1 即为 活细胞 （live），或 0 即为 死细胞 （dead）。每个细胞与其八个相邻位置（水平，垂直，对角线）的细胞都遵循以下四条生存定律：
+
+1. 如果活细胞周围八个位置的活细胞数少于两个，则该位置活细胞死亡；
+2. 如果活细胞周围八个位置有两个或三个活细胞，则该位置活细胞仍然存活；
+3. 如果活细胞周围八个位置有超过三个活细胞，则该位置活细胞死亡；
+4. 如果死细胞周围正好有三个活细胞，则该位置死细胞复活；
+
+下一个状态是通过将上述规则同时应用于当前状态下的每个细胞所形成的，其中细胞的出生和死亡是同时发生的。给你 m x n 网格面板 board 的当前状态，返回下一个状态。
+
+进阶：
+
+* 你可以使用原地算法解决本题吗？请注意，面板上所有格子需要同时被更新：你不能先更新某些格子，然后使用它们的更新后的值再更新其他格子。
+* 本题中，我们使用二维数组来表示面板。原则上，面板是无限的，但当活细胞侵占了面板边界时会造成问题。你将如何解决这些问题？
+
+*题解*
+
+题目本身比较简单，如果需要使用使用原地数组的方式，则需要引入额外的状态标记已改变的状态。（即通过该状态可以推测出原来的状态，也可以推测出新状态）。
+
+这里我使用`-1`表示`0 -> 1`， `-2: 1 -> 0`。
+
+代码如下：
+
+```cpp
+class Solution {
+ public:
+  void gameOfLife(vector<vector<int>>& board) {
+    int row, col;
+    row = board.size();
+    col = board[0].size();
+
+    for (int i = 0; i < row; i++) {
+      for (int j = 0; j < col; j++) {
+        int num = cellNum(board, i, j);
+        if (board[i][j] == 1) {
+          if (num < 2 || num > 3) {
+            board[i][j] = -2;
+          }
+        } else if (num == 3) {
+          board[i][j] = -1;
+        }
+        // printf("(%d, %d) %d, ", i, j, num);
+      }
+      // printf("\n");
+    }
+
+    for (int i = 0; i < row; i++) {
+      for (int j = 0; j < col; j++) {
+        if (board[i][j] == -1) {
+          board[i][j] = 1;
+        } else if (board[i][j] == -2) {
+          board[i][j] = 0;
+        }
+      }
+    }
+  }
+
+  static inline int cellNum(vector<vector<int>>& board, int center_i,
+                            int center_j) {
+    int now_i, now_j, row, col;
+    row = board.size();
+    col = board[0].size();
+    int ans = 0;
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        if (i == 1 && i == j) {
+          continue;
+        }
+        now_i = center_i - 1 + i;
+        now_j = center_j - 1 + j;
+        if (now_i < 0 || now_j < 0 || now_i >= row || now_j >= col) {
+          continue;
+        }
+        int tmp = board[now_i][now_j];
+        if (tmp < 0) {
+          tmp = tmp == -2 ? 1 : 0;
+        }
+        ans += tmp;
+      }
+    }
+    return ans;
+  }
+};
+```
+
+### 205. 同构字符串
+
+给定两个字符串 s 和 t ，判断它们是否是同构的。
+
+如果 s 中的字符可以按某种映射关系替换得到 t ，那么这两个字符串是同构的。
+
+每个出现的字符都应当映射到另一个字符，同时不改变字符的顺序。不同字符不能映射到同一个字符上，相同字符只能映射到同一个字符上，字符可以映射到自己本身。
+
+*题解*
+
+```cpp
+class Solution {
+ public:
+  bool isIsomorphic(string s, string t) {
+    unordered_map<char, char> replace_map;
+    unordered_set<char> used_chars;
+    for (int i = 0; i < s.size(); i++) {
+      if (replace_map.count(s[i]) == 0) {
+        if(used_chars.count(t[i]))
+          return false;
+        replace_map[s[i]] = t[i];
+        used_chars.insert(t[i]);
+        continue;
+      }
+      if (replace_map[s[i]] != t[i]) return false;
+    }
+    return true;
+  }
+};
+```
+
+其他没啥，有个小语法问题:
+
+```cpp
+int a[26] {0}; // 则全初始化为0
+int a[26] {1}; // 只有第一个元素为1，其他为0
+```
+
+### 538. 把二叉搜索树转换为累加树
+
+<https://leetcode.cn/problems/convert-bst-to-greater-tree/>
+
+给出二叉 搜索 树的根节点，该树的节点值各不相同，请你将其转换为累加树（Greater Sum Tree），使每个节点 node 的新值等于原树中大于或等于 node.val 的值之和。
+
+提醒一下，二叉搜索树满足下列约束条件：
+
+节点的左子树仅包含键 小于 节点键的节点。
+节点的右子树仅包含键 大于 节点键的节点。
+左右子树也必须是二叉搜索树。
+注意：本题和 1038: https://leetcode-cn.com/problems/binary-search-tree-to-greater-sum-tree/ 相同
+
+*题目*
+
+最简单的做法就是反序中序遍历，代码如下所示：
+
+```cpp
+class Solution {
+ public:
+  TreeNode* convertBST(TreeNode* root) {
+    treeSum(root, 0);
+    return root;
+  }
+
+  int treeSum(TreeNode* root, int father_sum){
+    if(!root){
+      return 0;
+    }
+    int ans = root->val;
+    root->val += father_sum;
+    int right_sum = treeSum(root->right, father_sum);
+    ans += right_sum;
+    root->val += right_sum;
+    return ans + treeSum(root->left, root->val);
+  }
+};
+```
+
+> 这里把father_sum变成一个全局变量，可能还要更方便一点。
+
+有一点需要注意，当在计算类似图中节点2时，其的和除了自己，自己左子树的和，还有节点4（根）的和。
+
+![580-exampl](./imgs/538-example.png)
+
+除此之外，官方题解中还提到了Morris遍历，即借用类似线索二叉树遍历的方式（用最左节点的空指针），避免使用额外的空间，空间复杂度只需O(1)。
+
+这里附上代码：
+
+```cpp
+class Solution {
+public:
+    TreeNode* getSuccessor(TreeNode* node) {
+        TreeNode* succ = node->right;
+        while (succ->left != nullptr && succ->left != node) {
+            succ = succ->left;
+        }
+        return succ;
+    }
+
+    TreeNode* convertBST(TreeNode* root) {
+        int sum = 0;
+        TreeNode* node = root;
+
+        while (node != nullptr) {
+            if (node->right == nullptr) {
+                sum += node->val;
+                node->val = sum;
+                node = node->left;
+            } else {
+                TreeNode* succ = getSuccessor(node);
+                if (succ->left == nullptr) {
+                    succ->left = node;
+                    node = node->right;
+                } else {
+                    succ->left = nullptr;
+                    sum += node->val;
+                    node->val = sum;
+                    node = node->left;
+                }
+            }
+        }
+
+        return root;
+    }
+};
+```
+
+### 543.二叉树的直径
+
+给你一棵二叉树的根节点，返回该树的 直径 。
+
+二叉树的 直径 是指树中任意两个节点之间最长路径的 长度 。这条路径可能经过也可能不经过根节点 root 。
+
+两节点之间路径的 长度 由它们之间边数表示。
+
+*题解*
+
+考虑每个节点，假设最长直径就是以它为转折，那么此时该路径长度为，左子树的高度加上右子树的高度。
+
+总有一种方案是最优的，所以比较所有节点的值，取最大的即可。
+
+
+```cpp
+class Solution {
+ public:
+  int ans = 0;
+  int diameterOfBinaryTree(TreeNode* root) {
+    treeHeight(root);
+    return ans;
+  }
+
+  int treeHeight(TreeNode* root){
+    if(!root)
+      return -1;
+    int left_h = treeHeight(root->left);
+    int right_h = treeHeight(root->right);
+    ans = max(ans, left_h + right_h + 2);
+    return 1 + max(left_h, right_h);
+  }
+};
+```
