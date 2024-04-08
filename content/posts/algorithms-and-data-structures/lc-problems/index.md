@@ -1250,3 +1250,229 @@ class Solution {
   }
 };
 ```
+
+### 560.和为K的子数组
+
+<https://leetcode.cn/problems/subarray-sum-equals-k/description/>
+
+给你一个整数数组 nums 和一个整数 k ，请你统计并返回 该数组中和为 k 的子数组的个数 。
+
+子数组是数组中元素的连续非空序列。
+
+*题目*
+
+暴力可解：
+
+```cpp
+class Solution {
+ public:
+  int subarraySum(vector<int>& nums, int k) {
+    int sum = 0, n = nums.size();
+    int ans = 0;
+    for(int i = 0;i < n; i++){
+      sum = 0;
+      for(int j = i; j < n; j++){
+        sum += nums[j];
+        if(sum == k)
+          ans++;
+      }
+    }
+    return ans;
+  }
+};
+```
+
+优化为`O(n)`，使用前缀和hash map，`pre[j] - pre[i] = k`，则`pre[j] - k = pre[i]`，故只需要把`pre[i]`用hash map统计起来，执行到`j`时再用`pre[j] - k`去查即可。
+
+注意hash map的初始值，对于`0~j`的数组需要一个`mp[0] = 1`
+
+```cpp
+class Solution {
+ public:
+  int subarraySum(vector<int>& nums, int k) {
+    unordered_map<int, int> mp;
+    int sum = 0;
+    int ans = 0;
+    for(int i = 0; i < nums.size(); i++){
+      sum += nums[i];
+      if(mp.count(sum - k)){
+        ans += mp[sum - k];
+      }
+      mp[sum]++;
+    }
+    return ans;
+  }
+};
+```
+
+### 581. 最短无序连续子数组
+
+<https://leetcode.cn/problems/shortest-unsorted-continuous-subarray/description/>
+
+给你一个整数数组 nums ，你需要找出一个 连续子数组 ，如果对这个子数组进行升序排序，那么整个数组都会变为升序排序。
+
+请你找出符合题意的 最短 子数组，并输出它的长度。
+
+*题解*
+
+最简单的办法就是将数组排序（排pair<val, inx>）,这样比较位置变化即可。但其复杂度为`O(NlogN)`
+
+从题目易得，根据结果可以将数组分为三段，前面的升序，中间需要排序的数组，后面又是升序。
+
+可以从排序的性质入手，从最后一个元素开始考虑设下标为`i=n-1`，那么如果`nums[i]`比之前的最大值`max_val`都大，那么`nums[i]`（即最后一个）就是在最终的位置上。
+
+那么最后一段，都有这种性质，如果从后往前遍历，那么第一个没有这种性质的就是要求的子数组的末尾。
+
+但由于要求`max_val`从后往前遍历不方便，从前往后遍历，那么最后一个没有这种性质的，和从后往前的第一个结果是一样的。
+
+同理，可以根据`min_val`然后相反遍历，求出子数组的头。
+
+代码如下：
+
+```cpp
+class Solution {
+ public:
+  int findUnsortedSubarray(vector<int>& nums) {
+    int cur_max = INT_MIN, cur_min = INT_MAX, n = nums.size();
+    int last_max_reverse_inx = -1, last_min_reverse_inx = -1;
+    for(int i = 0;i  < n;i++){
+      if(nums[i] < cur_max){
+        last_max_reverse_inx = i;
+      }else
+        cur_max = nums[i];
+
+      if(nums[n - i - 1] > cur_min){
+        last_min_reverse_inx = nums.size() - i - 1;
+      }else{
+        cur_min = nums[n - i - 1];
+      }
+    }
+
+    if(last_max_reverse_inx == -1)
+      return 0;
+    return last_min_reverse_inx - last_max_reverse_inx + 1;
+  }
+};
+```
+
+### 617.合并二叉树
+
+给你两棵二叉树： root1 和 root2 。
+
+想象一下，当你将其中一棵覆盖到另一棵之上时，两棵树上的一些节点将会重叠（而另一些不会）。你需要将这两棵树合并成一棵新二叉树。合并的规则是：如果两个节点重叠，那么将这两个节点的值相加作为合并后节点的新值；否则，不为 null 的节点将直接作为新二叉树的节点。
+
+返回合并后的二叉树。
+
+注意: 合并过程必须从两个树的根节点开始
+
+*题解*
+
+想到递归，这就是最简单的做法。
+
+```cpp
+class Solution {
+ public:
+  TreeNode* mergeTrees(TreeNode* root1, TreeNode* root2) {
+    if (!root1 && !root2) return nullptr;
+    if (root1 == nullptr) return root2;
+    if (root2 == nullptr) return root1;
+    root2->val += root1->val;
+    root2->left = mergeTrees(root1->left, root2->left);
+    root2->right = mergeTrees(root1->right, root2->right);
+    return root2;
+  }
+};
+```
+
+### 621.任务调度器
+
+给你一个用字符数组 tasks 表示的 CPU 需要执行的任务列表，用字母 A 到 Z 表示，以及一个冷却时间 n。每个周期或时间间隔允许完成一项任务。任务可以按任何顺序完成，但有一个限制：两个 相同种类 的任务之间必须有长度为 n 的冷却时间。
+
+返回完成所有任务所需要的 最短时间间隔 。
+
+```
+示例 1：
+
+输入：tasks = ["A","A","A","B","B","B"], n = 2
+输出：8
+解释：A -> B -> (待命) -> A -> B -> (待命) -> A -> B
+     在本示例中，两个相同类型任务之间必须间隔长度为 n = 2 的冷却时间，而执行一个任务只需要一个单位时间，所以中间出现了（待命）状态。 
+```
+
+*题解*
+
+采用模拟的方式，在每个时间点都去选择未处于冷却，并且剩余任务次数最多的。
+
+具体的证明参见[leetcode官方题解](https://leetcode.cn/problems/task-scheduler/solutions/509687/ren-wu-diao-du-qi-by-leetcode-solution-ur9w/)
+
+```cpp
+class Solution {
+ public:
+  int leastInterval(vector<char>& tasks, int n) {
+    // : {nextValidTime, freq}
+    vector<pair<int, int>> freq(26, {1, 0});
+    for (auto c : tasks) {
+      freq[c - 'A'].second++;
+    }
+    int task_count = 0;
+    int min_time, max_inx;
+    int time_now = 1;
+    while (task_count < tasks.size()) {
+      max_inx = pickMaxFreq(time_now, freq, min_time);
+      if (max_inx == -1) {
+        time_now = min_time;
+        continue;
+      }
+      freq[max_inx].first = time_now + n + 1;
+      freq[max_inx].second--;
+      task_count++;
+      time_now++;
+    }
+    return time_now - 1;
+  }
+
+  static inline int pickMaxFreq(int now, vector<pair<int, int>>& freq,
+                                int& min_time) {
+    int ret = -1;
+    int max_freq = 0;
+    min_time = INT_MAX;
+    for (int i = 0; i < freq.size(); i++) {
+      if (freq[i].first <= now && freq[i].second > max_freq) {
+        max_freq = freq[i].second;
+        ret = i;
+      }
+      // ignore 0 freq task
+      if (freq[i].second > 0) min_time = min(min_time, freq[i].first);
+    }
+    return ret;
+  }
+};
+```
+
+### 739. 每日温度
+
+给定一个整数数组 temperatures ，表示每天的温度，返回一个数组 answer ，其中 answer[i] 是指对于第 i 天，下一个更高温度出现在几天后。如果气温在这之后都不会升高，请在该位置用 0 来代替。
+
+*题解*
+
+可通过单调递减栈来计算。比较简单直接看代码。
+
+```cpp
+class Solution {
+ public:
+  vector<int> dailyTemperatures(vector<int>& temperatures) {
+    vector<int> ans(temperatures.size(), 0);
+    stack<pair<int, int>> st;
+    for(int i = temperatures.size() - 1; i >= 0; i--){
+      while(!st.empty() && st.top().first <= temperatures[i]){
+        st.pop();
+      }
+      if(!st.empty()){
+        ans[i] = st.top().second - i;
+      }
+      st.push({temperatures[i], i});
+    }
+    return ans;
+  }
+};
+```
