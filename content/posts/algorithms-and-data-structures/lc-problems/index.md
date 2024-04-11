@@ -1476,3 +1476,57 @@ class Solution {
   }
 };
 ```
+
+### 11.盛水最多的容器
+
+给定一个长度为 n 的整数数组 height 。有 n 条垂线，第 i 条线的两个端点是 (i, 0) 和 (i, height[i]) 。
+
+找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。
+
+返回容器可以储存的最大水量。
+
+说明：你不能倾斜容器。
+
+*题解*
+
+这道题的解法可以说相当巧妙了。双指针，每次移动高度较低那个，见代码：
+
+```cpp
+class Solution {
+ public:
+  int maxArea(vector<int>& height) {
+    int i = 0, j = height.size() - 1;
+    int ans = 0;
+    while(i < j){
+      ans = max((j - i) * min(height[i], height[j]), ans);
+      if(height[i] < height[j]) i++;
+      else j--;
+    }
+    return ans;
+  }
+};
+```
+
+正确性说明：对于最开始`(0, n-1)`，假设`height[0] < height[n-1]`，那么对于所有的包含`height[0]`容器来说，`height[0] * (n-1)`就是最大值。
+
+> 因为此时x是最大的，并且容积是min(height[0], height[other])*x，其中`min(height[0], height[other]) <= height[0]`
+
+所以此时`height[0]`就可以不用考虑了，移动i指针，使用同样的方法去考虑`height[1, n-1]`，依次递归考虑。
+
+### 15. 三数之和
+
+给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请
+
+你返回所有和为 0 且不重复的三元组。
+
+注意：答案中不可以包含重复的三元组。
+
+*题解*
+
+这里的重点在于答案不能重复。
+
+有两种O(n^2)的解法：
+
+1. 从左遍历，设nums[i]为三数中的`nums[i]`，那么找出所有包含nums[i]的所有满足要求三元组(所以下一次nums[i+1]时就不用考虑nums[i]了)，此时相当于在`(i+1, n-1)`中找两数之和(用Hash表)。
+
+2. 和1思想一样但是找两数之和的方式使用排序+双指针，即先将nums排序，还是从左遍历确定一个nums[i]，然后由于`(i+1, n-1)`现在是有序的，所以找两数之和可用双指针。
