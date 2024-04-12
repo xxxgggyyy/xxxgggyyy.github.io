@@ -1,5 +1,5 @@
 ---
-title: "unp threads coro"
+title: "线程-线程特定数据-协程"
 date: 2023-03-24T20:05:38+08:00
 topics: "cs-basis"
 draft: true
@@ -72,13 +72,13 @@ int pthread_detach(pthread_t tid);
 
 线程特定数据的一种可能的实现形式如下：
 
-![thread_spec_data](/home/xui/Pictures/screenshots/unp/thread_spec_data1.png)
+![thread_spec_data](./imgs/thread_spec_data1.png)
 
 线程库（系统）在**进程**范围内维护一个称之为Key结构的结构数组。每个Key有两个字段，其中标志字段标示该数组元素是否可用。析构函数指针的作用稍后讨论。
 
 > 每个系统支持的线程特定数据有限，POSIX要求这个限制不小于128
 
-![thread_spec_data](/home/xui/Pictures/screenshots/unp/thread_spec_data2.png)
+![thread_spec_data](./imgs/thread_spec_data2.png)
 
 除了上述的Key结构数据，系统（线程库）还为每个**线程**维护多条信息，如图所示。这里称之为pkey数组。
 
@@ -91,8 +91,9 @@ int pthread_detach(pthread_t tid);
 使用线程特定数据改造的`readline()`函数如下：
 
 
-![ts_readline1](/home/xui/Pictures/screenshots/unp/ts_readline1.png)
-![ts_readline2](/home/xui/Pictures/screenshots/unp/ts_readline2.png)
+![ts_readline1](./imgs/ts_readline1.png)
+
+> 最重要的是，这里的key为全局变量，所有线程为某个特定数据获取同样的索引。这为全局访问提供了支持。
 
 使用`pthread_once()`保证在所有线程中只执行唯一一次`readline_once()`，其中执行`pthread_key_create()`向系统申请Key结构数组中的一个索引。然后在每个线程中现在都可以使用一个特定于线程的静态指针变量了`pkey[i]`。
 
