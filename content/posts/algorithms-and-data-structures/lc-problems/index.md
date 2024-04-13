@@ -1000,3 +1000,533 @@ public:
 };
 ```
 
+### 289.生命游戏
+
+<https://leetcode.cn/problems/game-of-life>
+
+根据 百度百科 ， 生命游戏 ，简称为 生命 ，是英国数学家约翰·何顿·康威在 1970 年发明的细胞自动机。
+
+给定一个包含 m × n 个格子的面板，每一个格子都可以看成是一个细胞。每个细胞都具有一个初始状态： 1 即为 活细胞 （live），或 0 即为 死细胞 （dead）。每个细胞与其八个相邻位置（水平，垂直，对角线）的细胞都遵循以下四条生存定律：
+
+1. 如果活细胞周围八个位置的活细胞数少于两个，则该位置活细胞死亡；
+2. 如果活细胞周围八个位置有两个或三个活细胞，则该位置活细胞仍然存活；
+3. 如果活细胞周围八个位置有超过三个活细胞，则该位置活细胞死亡；
+4. 如果死细胞周围正好有三个活细胞，则该位置死细胞复活；
+
+下一个状态是通过将上述规则同时应用于当前状态下的每个细胞所形成的，其中细胞的出生和死亡是同时发生的。给你 m x n 网格面板 board 的当前状态，返回下一个状态。
+
+进阶：
+
+* 你可以使用原地算法解决本题吗？请注意，面板上所有格子需要同时被更新：你不能先更新某些格子，然后使用它们的更新后的值再更新其他格子。
+* 本题中，我们使用二维数组来表示面板。原则上，面板是无限的，但当活细胞侵占了面板边界时会造成问题。你将如何解决这些问题？
+
+*题解*
+
+题目本身比较简单，如果需要使用使用原地数组的方式，则需要引入额外的状态标记已改变的状态。（即通过该状态可以推测出原来的状态，也可以推测出新状态）。
+
+这里我使用`-1`表示`0 -> 1`， `-2: 1 -> 0`。
+
+代码如下：
+
+```cpp
+class Solution {
+ public:
+  void gameOfLife(vector<vector<int>>& board) {
+    int row, col;
+    row = board.size();
+    col = board[0].size();
+
+    for (int i = 0; i < row; i++) {
+      for (int j = 0; j < col; j++) {
+        int num = cellNum(board, i, j);
+        if (board[i][j] == 1) {
+          if (num < 2 || num > 3) {
+            board[i][j] = -2;
+          }
+        } else if (num == 3) {
+          board[i][j] = -1;
+        }
+        // printf("(%d, %d) %d, ", i, j, num);
+      }
+      // printf("\n");
+    }
+
+    for (int i = 0; i < row; i++) {
+      for (int j = 0; j < col; j++) {
+        if (board[i][j] == -1) {
+          board[i][j] = 1;
+        } else if (board[i][j] == -2) {
+          board[i][j] = 0;
+        }
+      }
+    }
+  }
+
+  static inline int cellNum(vector<vector<int>>& board, int center_i,
+                            int center_j) {
+    int now_i, now_j, row, col;
+    row = board.size();
+    col = board[0].size();
+    int ans = 0;
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+        if (i == 1 && i == j) {
+          continue;
+        }
+        now_i = center_i - 1 + i;
+        now_j = center_j - 1 + j;
+        if (now_i < 0 || now_j < 0 || now_i >= row || now_j >= col) {
+          continue;
+        }
+        int tmp = board[now_i][now_j];
+        if (tmp < 0) {
+          tmp = tmp == -2 ? 1 : 0;
+        }
+        ans += tmp;
+      }
+    }
+    return ans;
+  }
+};
+```
+
+### 205. 同构字符串
+
+给定两个字符串 s 和 t ，判断它们是否是同构的。
+
+如果 s 中的字符可以按某种映射关系替换得到 t ，那么这两个字符串是同构的。
+
+每个出现的字符都应当映射到另一个字符，同时不改变字符的顺序。不同字符不能映射到同一个字符上，相同字符只能映射到同一个字符上，字符可以映射到自己本身。
+
+*题解*
+
+```cpp
+class Solution {
+ public:
+  bool isIsomorphic(string s, string t) {
+    unordered_map<char, char> replace_map;
+    unordered_set<char> used_chars;
+    for (int i = 0; i < s.size(); i++) {
+      if (replace_map.count(s[i]) == 0) {
+        if(used_chars.count(t[i]))
+          return false;
+        replace_map[s[i]] = t[i];
+        used_chars.insert(t[i]);
+        continue;
+      }
+      if (replace_map[s[i]] != t[i]) return false;
+    }
+    return true;
+  }
+};
+```
+
+其他没啥，有个小语法问题:
+
+```cpp
+int a[26] {0}; // 则全初始化为0
+int a[26] {1}; // 只有第一个元素为1，其他为0
+```
+
+### 538. 把二叉搜索树转换为累加树
+
+<https://leetcode.cn/problems/convert-bst-to-greater-tree/>
+
+给出二叉 搜索 树的根节点，该树的节点值各不相同，请你将其转换为累加树（Greater Sum Tree），使每个节点 node 的新值等于原树中大于或等于 node.val 的值之和。
+
+提醒一下，二叉搜索树满足下列约束条件：
+
+节点的左子树仅包含键 小于 节点键的节点。
+节点的右子树仅包含键 大于 节点键的节点。
+左右子树也必须是二叉搜索树。
+注意：本题和 1038: https://leetcode-cn.com/problems/binary-search-tree-to-greater-sum-tree/ 相同
+
+*题目*
+
+最简单的做法就是反序中序遍历，代码如下所示：
+
+```cpp
+class Solution {
+ public:
+  TreeNode* convertBST(TreeNode* root) {
+    treeSum(root, 0);
+    return root;
+  }
+
+  int treeSum(TreeNode* root, int father_sum){
+    if(!root){
+      return 0;
+    }
+    int ans = root->val;
+    root->val += father_sum;
+    int right_sum = treeSum(root->right, father_sum);
+    ans += right_sum;
+    root->val += right_sum;
+    return ans + treeSum(root->left, root->val);
+  }
+};
+```
+
+> 这里把father_sum变成一个全局变量，可能还要更方便一点。
+
+有一点需要注意，当在计算类似图中节点2时，其的和除了自己，自己左子树的和，还有节点4（根）的和。
+
+![580-exampl](./imgs/538-example.png)
+
+除此之外，官方题解中还提到了Morris遍历，即借用类似线索二叉树遍历的方式（用最左节点的空指针），避免使用额外的空间，空间复杂度只需O(1)。
+
+这里附上代码：
+
+```cpp
+class Solution {
+public:
+    TreeNode* getSuccessor(TreeNode* node) {
+        TreeNode* succ = node->right;
+        while (succ->left != nullptr && succ->left != node) {
+            succ = succ->left;
+        }
+        return succ;
+    }
+
+    TreeNode* convertBST(TreeNode* root) {
+        int sum = 0;
+        TreeNode* node = root;
+
+        while (node != nullptr) {
+            if (node->right == nullptr) {
+                sum += node->val;
+                node->val = sum;
+                node = node->left;
+            } else {
+                TreeNode* succ = getSuccessor(node);
+                if (succ->left == nullptr) {
+                    succ->left = node;
+                    node = node->right;
+                } else {
+                    succ->left = nullptr;
+                    sum += node->val;
+                    node->val = sum;
+                    node = node->left;
+                }
+            }
+        }
+
+        return root;
+    }
+};
+```
+
+### 543.二叉树的直径
+
+给你一棵二叉树的根节点，返回该树的 直径 。
+
+二叉树的 直径 是指树中任意两个节点之间最长路径的 长度 。这条路径可能经过也可能不经过根节点 root 。
+
+两节点之间路径的 长度 由它们之间边数表示。
+
+*题解*
+
+考虑每个节点，假设最长直径就是以它为转折，那么此时该路径长度为，左子树的高度加上右子树的高度。
+
+总有一种方案是最优的，所以比较所有节点的值，取最大的即可。
+
+
+```cpp
+class Solution {
+ public:
+  int ans = 0;
+  int diameterOfBinaryTree(TreeNode* root) {
+    treeHeight(root);
+    return ans;
+  }
+
+  int treeHeight(TreeNode* root){
+    if(!root)
+      return -1;
+    int left_h = treeHeight(root->left);
+    int right_h = treeHeight(root->right);
+    ans = max(ans, left_h + right_h + 2);
+    return 1 + max(left_h, right_h);
+  }
+};
+```
+
+### 560.和为K的子数组
+
+<https://leetcode.cn/problems/subarray-sum-equals-k/description/>
+
+给你一个整数数组 nums 和一个整数 k ，请你统计并返回 该数组中和为 k 的子数组的个数 。
+
+子数组是数组中元素的连续非空序列。
+
+*题目*
+
+暴力可解：
+
+```cpp
+class Solution {
+ public:
+  int subarraySum(vector<int>& nums, int k) {
+    int sum = 0, n = nums.size();
+    int ans = 0;
+    for(int i = 0;i < n; i++){
+      sum = 0;
+      for(int j = i; j < n; j++){
+        sum += nums[j];
+        if(sum == k)
+          ans++;
+      }
+    }
+    return ans;
+  }
+};
+```
+
+优化为`O(n)`，使用前缀和hash map，`pre[j] - pre[i] = k`，则`pre[j] - k = pre[i]`，故只需要把`pre[i]`用hash map统计起来，执行到`j`时再用`pre[j] - k`去查即可。
+
+注意hash map的初始值，对于`0~j`的数组需要一个`mp[0] = 1`
+
+```cpp
+class Solution {
+ public:
+  int subarraySum(vector<int>& nums, int k) {
+    unordered_map<int, int> mp;
+    int sum = 0;
+    int ans = 0;
+    for(int i = 0; i < nums.size(); i++){
+      sum += nums[i];
+      if(mp.count(sum - k)){
+        ans += mp[sum - k];
+      }
+      mp[sum]++;
+    }
+    return ans;
+  }
+};
+```
+
+### 581. 最短无序连续子数组
+
+<https://leetcode.cn/problems/shortest-unsorted-continuous-subarray/description/>
+
+给你一个整数数组 nums ，你需要找出一个 连续子数组 ，如果对这个子数组进行升序排序，那么整个数组都会变为升序排序。
+
+请你找出符合题意的 最短 子数组，并输出它的长度。
+
+*题解*
+
+最简单的办法就是将数组排序（排pair<val, inx>）,这样比较位置变化即可。但其复杂度为`O(NlogN)`
+
+从题目易得，根据结果可以将数组分为三段，前面的升序，中间需要排序的数组，后面又是升序。
+
+可以从排序的性质入手，从最后一个元素开始考虑设下标为`i=n-1`，那么如果`nums[i]`比之前的最大值`max_val`都大，那么`nums[i]`（即最后一个）就是在最终的位置上。
+
+那么最后一段，都有这种性质，如果从后往前遍历，那么第一个没有这种性质的就是要求的子数组的末尾。
+
+但由于要求`max_val`从后往前遍历不方便，从前往后遍历，那么最后一个没有这种性质的，和从后往前的第一个结果是一样的。
+
+同理，可以根据`min_val`然后相反遍历，求出子数组的头。
+
+代码如下：
+
+```cpp
+class Solution {
+ public:
+  int findUnsortedSubarray(vector<int>& nums) {
+    int cur_max = INT_MIN, cur_min = INT_MAX, n = nums.size();
+    int last_max_reverse_inx = -1, last_min_reverse_inx = -1;
+    for(int i = 0;i  < n;i++){
+      if(nums[i] < cur_max){
+        last_max_reverse_inx = i;
+      }else
+        cur_max = nums[i];
+
+      if(nums[n - i - 1] > cur_min){
+        last_min_reverse_inx = nums.size() - i - 1;
+      }else{
+        cur_min = nums[n - i - 1];
+      }
+    }
+
+    if(last_max_reverse_inx == -1)
+      return 0;
+    return last_min_reverse_inx - last_max_reverse_inx + 1;
+  }
+};
+```
+
+### 617.合并二叉树
+
+给你两棵二叉树： root1 和 root2 。
+
+想象一下，当你将其中一棵覆盖到另一棵之上时，两棵树上的一些节点将会重叠（而另一些不会）。你需要将这两棵树合并成一棵新二叉树。合并的规则是：如果两个节点重叠，那么将这两个节点的值相加作为合并后节点的新值；否则，不为 null 的节点将直接作为新二叉树的节点。
+
+返回合并后的二叉树。
+
+注意: 合并过程必须从两个树的根节点开始
+
+*题解*
+
+想到递归，这就是最简单的做法。
+
+```cpp
+class Solution {
+ public:
+  TreeNode* mergeTrees(TreeNode* root1, TreeNode* root2) {
+    if (!root1 && !root2) return nullptr;
+    if (root1 == nullptr) return root2;
+    if (root2 == nullptr) return root1;
+    root2->val += root1->val;
+    root2->left = mergeTrees(root1->left, root2->left);
+    root2->right = mergeTrees(root1->right, root2->right);
+    return root2;
+  }
+};
+```
+
+### 621.任务调度器
+
+给你一个用字符数组 tasks 表示的 CPU 需要执行的任务列表，用字母 A 到 Z 表示，以及一个冷却时间 n。每个周期或时间间隔允许完成一项任务。任务可以按任何顺序完成，但有一个限制：两个 相同种类 的任务之间必须有长度为 n 的冷却时间。
+
+返回完成所有任务所需要的 最短时间间隔 。
+
+```
+示例 1：
+
+输入：tasks = ["A","A","A","B","B","B"], n = 2
+输出：8
+解释：A -> B -> (待命) -> A -> B -> (待命) -> A -> B
+     在本示例中，两个相同类型任务之间必须间隔长度为 n = 2 的冷却时间，而执行一个任务只需要一个单位时间，所以中间出现了（待命）状态。 
+```
+
+*题解*
+
+采用模拟的方式，在每个时间点都去选择未处于冷却，并且剩余任务次数最多的。
+
+具体的证明参见[leetcode官方题解](https://leetcode.cn/problems/task-scheduler/solutions/509687/ren-wu-diao-du-qi-by-leetcode-solution-ur9w/)
+
+```cpp
+class Solution {
+ public:
+  int leastInterval(vector<char>& tasks, int n) {
+    // : {nextValidTime, freq}
+    vector<pair<int, int>> freq(26, {1, 0});
+    for (auto c : tasks) {
+      freq[c - 'A'].second++;
+    }
+    int task_count = 0;
+    int min_time, max_inx;
+    int time_now = 1;
+    while (task_count < tasks.size()) {
+      max_inx = pickMaxFreq(time_now, freq, min_time);
+      if (max_inx == -1) {
+        time_now = min_time;
+        continue;
+      }
+      freq[max_inx].first = time_now + n + 1;
+      freq[max_inx].second--;
+      task_count++;
+      time_now++;
+    }
+    return time_now - 1;
+  }
+
+  static inline int pickMaxFreq(int now, vector<pair<int, int>>& freq,
+                                int& min_time) {
+    int ret = -1;
+    int max_freq = 0;
+    min_time = INT_MAX;
+    for (int i = 0; i < freq.size(); i++) {
+      if (freq[i].first <= now && freq[i].second > max_freq) {
+        max_freq = freq[i].second;
+        ret = i;
+      }
+      // ignore 0 freq task
+      if (freq[i].second > 0) min_time = min(min_time, freq[i].first);
+    }
+    return ret;
+  }
+};
+```
+
+### 739. 每日温度
+
+给定一个整数数组 temperatures ，表示每天的温度，返回一个数组 answer ，其中 answer[i] 是指对于第 i 天，下一个更高温度出现在几天后。如果气温在这之后都不会升高，请在该位置用 0 来代替。
+
+*题解*
+
+可通过单调递减栈来计算。比较简单直接看代码。
+
+```cpp
+class Solution {
+ public:
+  vector<int> dailyTemperatures(vector<int>& temperatures) {
+    vector<int> ans(temperatures.size(), 0);
+    stack<pair<int, int>> st;
+    for(int i = temperatures.size() - 1; i >= 0; i--){
+      while(!st.empty() && st.top().first <= temperatures[i]){
+        st.pop();
+      }
+      if(!st.empty()){
+        ans[i] = st.top().second - i;
+      }
+      st.push({temperatures[i], i});
+    }
+    return ans;
+  }
+};
+```
+
+### 11.盛水最多的容器
+
+给定一个长度为 n 的整数数组 height 。有 n 条垂线，第 i 条线的两个端点是 (i, 0) 和 (i, height[i]) 。
+
+找出其中的两条线，使得它们与 x 轴共同构成的容器可以容纳最多的水。
+
+返回容器可以储存的最大水量。
+
+说明：你不能倾斜容器。
+
+*题解*
+
+这道题的解法可以说相当巧妙了。双指针，每次移动高度较低那个，见代码：
+
+```cpp
+class Solution {
+ public:
+  int maxArea(vector<int>& height) {
+    int i = 0, j = height.size() - 1;
+    int ans = 0;
+    while(i < j){
+      ans = max((j - i) * min(height[i], height[j]), ans);
+      if(height[i] < height[j]) i++;
+      else j--;
+    }
+    return ans;
+  }
+};
+```
+
+正确性说明：对于最开始`(0, n-1)`，假设`height[0] < height[n-1]`，那么对于所有的包含`height[0]`容器来说，`height[0] * (n-1)`就是最大值。
+
+> 因为此时x是最大的，并且容积是min(height[0], height[other])*x，其中`min(height[0], height[other]) <= height[0]`
+
+所以此时`height[0]`就可以不用考虑了，移动i指针，使用同样的方法去考虑`height[1, n-1]`，依次递归考虑。
+
+### 15. 三数之和
+
+给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请
+
+你返回所有和为 0 且不重复的三元组。
+
+注意：答案中不可以包含重复的三元组。
+
+*题解*
+
+这里的重点在于答案不能重复。
+
+有两种O(n^2)的解法：
+
+1. 从左遍历，设nums[i]为三数中的`nums[i]`，那么找出所有包含nums[i]的所有满足要求三元组(所以下一次nums[i+1]时就不用考虑nums[i]了)，此时相当于在`(i+1, n-1)`中找两数之和(用Hash表)。
+
+2. 和1思想一样但是找两数之和的方式使用排序+双指针，即先将nums排序，还是从左遍历确定一个nums[i]，然后由于`(i+1, n-1)`现在是有序的，所以找两数之和可用双指针。

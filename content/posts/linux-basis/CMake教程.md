@@ -2,7 +2,7 @@
 title: "CMake教程"
 date: 2023-02-09T20:47:57+08:00
 topics: "linux-basis"
-draft: true
+draft: false
 ---
 
 # CMake教程
