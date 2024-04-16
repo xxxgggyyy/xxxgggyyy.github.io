@@ -1530,3 +1530,49 @@ class Solution {
 1. 从左遍历，设nums[i]为三数中的`nums[i]`，那么找出所有包含nums[i]的所有满足要求三元组(所以下一次nums[i+1]时就不用考虑nums[i]了)，此时相当于在`(i+1, n-1)`中找两数之和(用Hash表)。
 
 2. 和1思想一样但是找两数之和的方式使用排序+双指针，即先将nums排序，还是从左遍历确定一个nums[i]，然后由于`(i+1, n-1)`现在是有序的，所以找两数之和可用双指针。
+
+### 1871.跳跃游戏VII
+
+给你一个下标从 0 开始的二进制字符串 s 和两个整数 minJump 和 maxJump 。一开始，你在下标 0 处，且该位置的值一定为 '0' 。当同时满足如下条件时，你可以从下标 i 移动到下标 j 处：
+
+i + minJump <= j <= min(i + maxJump, s.length - 1) 且
+s[j] == '0'.
+如果你可以到达 s 的下标 s.length - 1 处，请你返回 true ，否则返回 false 。
+
+*题解*
+
+很简单的一个动态规划问题。设`dp[i]`为从最开始能否跳跃到这里：
+
+$$
+dp[i] = \sum{k=i-maxJump}^{i-minJump}dp[k]
+$$
+
+> `dp[i]`其实为bool，这里求和直接认为是求或就行了
+
+可以用滑动窗口做个优化，使用一个计数器其保持滑动窗口`{i-maxJump, i-minJump}`中为true的数量。
+
+代码如下：
+
+```cpp
+class Solution {
+public:
+    bool canReach(string s, int minJump, int maxJump) {
+        vector<bool> dp(s.size(), false);
+        dp[0] = true;
+        int cnt = 1, window = maxJump - minJump + 1;
+        for (int i = minJump; i < s.size(); i++) {
+            if (s[i] == '0' && cnt > 0) {
+                dp[i] = true;
+            }
+            if (dp[i - minJump + 1]) {
+                cnt++;
+            }
+            int edge = i - maxJump;
+            if (edge >= 0 && dp[edge]) {
+                cnt--;
+            }
+        }
+        return dp.back();
+    }
+};
+```
