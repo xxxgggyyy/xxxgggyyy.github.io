@@ -1513,24 +1513,6 @@ class Solution {
 
 所以此时`height[0]`就可以不用考虑了，移动i指针，使用同样的方法去考虑`height[1, n-1]`，依次递归考虑。
 
-### 15. 三数之和
-
-给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请
-
-你返回所有和为 0 且不重复的三元组。
-
-注意：答案中不可以包含重复的三元组。
-
-*题解*
-
-这里的重点在于答案不能重复。
-
-有两种O(n^2)的解法：
-
-1. 从左遍历，设nums[i]为三数中的`nums[i]`，那么找出所有包含nums[i]的所有满足要求三元组(所以下一次nums[i+1]时就不用考虑nums[i]了)，此时相当于在`(i+1, n-1)`中找两数之和(用Hash表)。
-
-2. 和1思想一样但是找两数之和的方式使用排序+双指针，即先将nums排序，还是从左遍历确定一个nums[i]，然后由于`(i+1, n-1)`现在是有序的，所以找两数之和可用双指针。
-
 ### 1871.跳跃游戏VII
 
 给你一个下标从 0 开始的二进制字符串 s 和两个整数 minJump 和 maxJump 。一开始，你在下标 0 处，且该位置的值一定为 '0' 。当同时满足如下条件时，你可以从下标 i 移动到下标 j 处：
@@ -1573,6 +1555,249 @@ public:
             }
         }
         return dp.back();
+    }
+};
+```
+### 15. 三数之和
+
+给你一个整数数组 nums ，判断是否存在三元组 [nums[i], nums[j], nums[k]] 满足 i != j、i != k 且 j != k ，同时还满足 nums[i] + nums[j] + nums[k] == 0 。请
+
+你返回所有和为 0 且不重复的三元组。
+
+注意：答案中不可以包含重复的三元组。
+
+*题解*
+
+这里的重点在于答案不能重复。
+
+直接暴力三重循环，可能会出现`(a,b,c)`和`(c,b,a)`的重复，所以先排个序，在暴力遍历时有`a<=b<=c`，尽管还是重复，但现在重复都是相同的而不用去考虑顺序不同的重复情况了。
+
+重复既然相同了就可去掉，只需要在每层循环跳过相同的值即可。可以这么理解，设有`111233`，在遍历完第一个`1`后，后面两个`1`都不需要在一重循环里了，因为就算从第二个`1`开始，得出的集合无非就是遍历第一个`1`时的子集，所以没有必要。
+
+但仍然时三重循环，还需要优化，已排序可考虑双指针。
+
+第一重循环照常遍历，找两数之和可考虑双指针，设为`i,j`，当前第一层循环值为`a`
+
+* `nums[i] + nums[j] + a > 0`，则表明`nums[j]`加上`nums[i~j-1]`都是大于`0`的，所以`--j`
+* `... < 0`，同理，`++i`
+
+注意当找到一组为0时，`i和j`还需要继续移动，因为在`i和j`同时一个增大一个减小时，其值是不确定的。但要跳过相同的以去重。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> threeSum(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+        vector<vector<int>> ans;
+        for(int i = 0; i < nums.size();i++){
+            if(i > 0 && nums[i - 1] == nums[i])
+                continue;
+            int l = i + 1, r = nums.size() - 1;
+            while(l < r){
+                int three_sum = nums[l] + nums[r] + nums[i];
+                if(three_sum > 0){
+                    r--;
+                }else if(three_sum < 0){
+                    l++;
+                }else{
+                    ans.push_back({nums[i], nums[l], nums[r]});
+                    l++;
+                    while(l < nums.size() && nums[l] == nums[l-1]) l++;
+                    r--;
+                    while(r >= 0 && nums[r] == nums[r+1]) r--;
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
+### 71.简化路径
+
+给你一个字符串 path ，表示指向某一文件或目录的 Unix 风格 绝对路径 （以 '/' 开头），请你将其转化为更加简洁的规范路径。
+
+在 Unix 风格的文件系统中，一个点（.）表示当前目录本身；此外，两个点 （..） 表示将目录切换到上一级（指向父目录）；两者都可以是复杂相对路径的组成部分。任意多个连续的斜杠（即，'//'）都被视为单个斜杠 '/' 。 对于此问题，任何其他格式的点（例如，'...'）均被视为文件/目录名称。
+
+请注意，返回的 规范路径 必须遵循下述格式：
+
+始终以斜杠 '/' 开头。
+两个目录名之间必须只有一个斜杠 '/' 。
+最后一个目录名（如果存在）不能 以 '/' 结尾。
+此外，路径仅包含从根目录到目标文件或目录的路径上的目录（即，不含 '.' 或 '..'）。
+返回简化后得到的 规范路径 。
+
+*题解*
+
+用栈来存储解析出的路劲即可，遇到".."则出栈一个，到上级目录。
+
+```cpp
+class Solution {
+public:
+    string simplifyPath(string path) {
+        vector<string_view> dentry_stack;
+        path.push_back('/');
+        string_view str(path);
+        int start = 0;
+        while(str[start] == '/') start++;
+        for(int i = start + 1; i < str.size(); i++){
+            if(str[i] != '/') continue;
+            string_view dentry = str.substr(start, i - start);
+            while(str[i] == '/') i++;
+            start = i;
+            if(dentry == "."){
+                continue;
+            }else if(dentry == ".."){
+                if(!dentry_stack.empty())
+                    dentry_stack.pop_back();
+            }else{
+                dentry_stack.push_back(dentry);
+            }
+        }
+        string ans;
+        for(auto& s : dentry_stack){
+            ans += "/" + string(s);
+        }
+        if(!ans.size()){
+            ans = "/";
+        }
+        return ans;
+    }
+};
+```
+
+### 33.搜索旋转排序数组
+
+整数数组 nums 按升序排列，数组中的值 互不相同 。
+
+在传递给函数之前，nums 在预先未知的某个下标 k（0 <= k < nums.length）上进行了 旋转，使数组变为 [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]（下标 从 0 开始 计数）。例如， [0,1,2,4,5,6,7] 在下标 3 处经旋转后可能变为 [4,5,6,7,0,1,2] 。
+
+给你 旋转后 的数组 nums 和一个整数 target ，如果 nums 中存在这个目标值 target ，则返回它的下标，否则返回 -1 。
+
+你必须设计一个时间复杂度为 O(log n) 的算法解决此问题。
+
+*题解*
+
+同样可使用二分法求解。求出`mid`可根据`nums[mid]`和`nums[i],nums[j]`得出那边是完全有序的，然后再根据target的值去决定丢弃哪一半。
+
+```cpp
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        int i = 0, j = nums.size() - 1;
+        while(i <= j){
+            int mid = (i + j) / 2;
+            if(nums[mid] == target){
+                return mid;
+            }
+            if(nums[mid] <= nums[j]){
+                if(target > nums[mid] && target <= nums[j]){
+                    i = mid + 1;
+                }else{
+                    j = mid - 1;
+                }
+                continue;
+            }
+
+            if(target >= nums[i] && target < nums[mid]){
+                j = mid - 1;
+            }else{
+                i = mid + 1;
+            }
+        }
+        return -1;
+    }
+};
+```
+
+### 81.搜索旋转排序数组 II
+
+已知存在一个按非降序排列的整数数组 nums ，数组中的值不必互不相同。
+
+在传递给函数之前，nums 在预先未知的某个下标 k（0 <= k < nums.length）上进行了 旋转 ，使数组变为 [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]]（下标 从 0 开始 计数）。例如， [0,1,2,4,4,4,5,6,6,7] 在下标 5 处经旋转后可能变为 [4,5,6,6,7,0,1,2,4,4] 。
+
+给你 旋转后 的数组 nums 和一个整数 target ，请你编写一个函数来判断给定的目标值是否存在于数组中。如果 nums 中存在这个目标值 target ，则返回 true ，否则返回 false 。
+
+你必须尽可能减少整个操作步骤。
+
+*题解*
+
+和上一题基本类似，但是可能出现`nums[mid]=nums[i]=nums[j]`此时无法判断哪边完全有序，可以先跳过一边的重复元素，重新开始。
+
+```cpp
+class Solution {
+public:
+    bool search(vector<int>& nums, int target) {
+        if(nums[0] == target){
+            return true;
+        }
+        int i = 0, j = nums.size() - 1;
+        while(i <= j){
+            int mid = (i + j) / 2;
+            if(nums[mid] == target){
+                return true;
+            }
+            if(i != j && nums[i] == nums[mid] && nums[j] == nums[mid]){
+                while(i <= j && nums[i] == nums[mid]) i++;
+                continue;
+            }
+            if(nums[mid] <= nums[j]){
+                if(target > nums[mid] && target <= nums[j]){
+                    i = mid + 1;
+                }else{
+                    j = mid - 1;
+                }
+                continue;
+            }
+
+            if(target >= nums[i] && target < nums[mid]){
+                j = mid - 1;
+            }else{
+                i = mid + 1;
+            }
+        }
+        return false;
+    }
+};
+```
+
+### 82. 删除排序链表中的重复元素 II
+
+给定一个已排序的链表的头 head ， 删除原始链表中所有重复数字的节点，只留下不同的数字 。返回 已排序的链表 。
+
+*题解*
+
+注意，这里是把只要出现了重复的元素就全部删掉，而不是删除重复的保留一个。
+
+这就显得稍微麻烦一点，指针多一点。
+
+```cpp
+class Solution {
+public:
+    ListNode* deleteDuplicates(ListNode* head) {
+        if(!head) return head;
+        ListNode dummy_head(256, head);
+        ListNode* llast = &dummy_head, *last = head, *p = head->next;
+        while(p){
+            bool dup = false;
+            while(p && p->val == last->val){
+                last->next = p->next;
+                delete p;
+                p = last->next;
+                dup = true;
+            }
+            if(dup){
+                llast->next = last->next;
+                delete last;
+                last = llast->next;
+                if(last) p = last->next;
+            }else{
+                llast = llast->next;
+                last = last->next;
+                p = p->next;
+            }
+        }
+        return dummy_head.next;
     }
 };
 ```
