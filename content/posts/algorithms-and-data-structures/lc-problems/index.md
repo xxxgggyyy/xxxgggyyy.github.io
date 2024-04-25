@@ -2028,3 +2028,61 @@ public:
     }
 };
 ```
+
+### 57.插入区间
+
+给你一个 无重叠的 ，按照区间起始端点排序的区间列表 intervals，其中 intervals[i] = [starti, endi] 表示第 i 个区间的开始和结束，并且 intervals 按照 starti 升序排列。同样给定一个区间 newInterval = [start, end] 表示另一个区间的开始和结束。
+
+在 intervals 中插入区间 newInterval，使得 intervals 依然按照 starti 升序排列，且区间之间不重叠（如果有必要的话，可以合并区间）。
+
+返回插入之后的 intervals。
+
+注意 你不需要原地修改 intervals。你可以创建一个新数组然后返回它。
+
+*题解*
+
+如果原地修改需要讨论的情况会更多，所以这里也选择创建新数组。（时间复杂度时一样的）
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> insert(vector<vector<int>>& intervals, vector<int>& newInterval) {
+        vector<vector<int>> ans;
+        int i = 0;
+        bool inserted = false;
+        for(; i < intervals.size(); i++){
+            auto& cur = intervals[i];
+            if(newInterval[1] < cur[0]){
+                ans.push_back(newInterval);
+                inserted = true;
+                break;
+            }
+            if(newInterval[0] > cur[1]){
+                ans.push_back(cur);
+                continue;
+            }
+            int& l = newInterval[0], &r = newInterval[1];
+            while(i < intervals.size()){
+                auto& cur = intervals[i];
+                if(cur[0] > r){
+                    break;
+                }
+                l = min(l, cur[0]);
+                r = max(r, cur[1]);
+                i++;
+            }
+            ans.push_back(newInterval);
+            inserted = true;
+            break;
+        }
+        while(i < intervals.size()) {
+            ans.push_back(intervals[i]);
+            i++;
+        }
+        if(!inserted) {
+            ans.push_back(newInterval);
+        }
+        return ans;
+    }
+};
+```
