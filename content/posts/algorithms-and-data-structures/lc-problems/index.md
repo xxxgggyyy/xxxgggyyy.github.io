@@ -1801,3 +1801,230 @@ public:
     }
 };
 ```
+
+### 86.分隔链表
+
+给你一个链表的头节点 head 和一个特定值 x ，请你对链表进行分隔，使得所有 小于 x 的节点都出现在 大于或等于 x 的节点之前。
+
+你应当 保留 两个分区中每个节点的初始相对位置。
+
+*题解*
+
+先找出前面已经是小于x所有节点，然后再遍历之后的将小于x的插入前面的即可。
+
+```cpp
+class Solution {
+public:
+    ListNode* partition(ListNode* head, int x) {
+        ListNode dummpy_head(x-1, head);
+        ListNode* less_tail = &dummpy_head, *p, *last;
+        while(less_tail->next && less_tail->next->val < x){
+            less_tail = less_tail->next;
+        }
+        last = less_tail->next;
+        p = less_tail->next;
+        while(p){
+            if(p->val < x){
+                last->next = p->next;
+                p->next = less_tail->next;
+                less_tail->next = p;
+                less_tail = p;
+                p = last->next;
+                continue;
+            }
+            last = p;
+            p = p->next;
+        }
+        return dummpy_head.next;
+    }
+};
+```
+
+### 89.格雷码
+
+n 位格雷码序列 是一个由 2n 个整数组成的序列，其中：
+* 每个整数都在范围 [0, 2n - 1] 内（含 0 和 2n - 1）
+* 第一个整数是 0
+* 一个整数在序列中出现 不超过一次
+* 每对 相邻 整数的二进制表示 恰好一位不同 ，且
+* 第一个 和 最后一个 整数的二进制表示 恰好一位不同
+给你一个整数 n ，返回任一有效的 n 位格雷码序列 。
+
+*题解*
+
+可以采用归纳法，在已知一组`n-1`的格雷码序列时，可以很容易求`n`的格雷码。
+
+这组`n-1`的格雷码序列直接可以作为`n`位格雷码的前$2^(n-1)$项，第`n`位为0即可。
+
+再把这`n-1`格雷码序列翻转，第`n`位置为`1`，再拼接上去即可。
+
+这样拼接的结果天然满足格雷码的定义。
+
+```cpp
+class Solution {
+public:
+    vector<int> grayCode(int n) {
+        vector<int> ans;
+        ans.reserve(1 << n);
+        ans.push_back(0);
+        for(int i = 1; i <= n; i++){
+            int n1_cnt = ans.size();
+            // 说是翻转再拼接，实际就是从后遍历n-1的格雷码
+            // 高位置1后直接拼接即可
+            for(int j = n1_cnt - 1; j >= 0; j--){
+                ans.push_back(ans[j] | (1 << (i - 1)));
+            }
+        }
+        return ans;
+    }
+};
+```
+
+### 90. 子集 II
+
+给你一个整数数组 nums ，其中可能包含重复元素，请你返回该数组所有可能的 
+子集
+（幂集）。
+
+解集 不能 包含重复的子集。返回的解集中，子集可以按 任意顺序 排列。
+
+*题目*
+
+这里不能重复，可以使用组合总数II中排序后跳过相同值的技巧。
+
+最开始考虑到，需要计算长度为0、1、2...，所以选择使用递归处理。
+
+但后面发现，其实不用，只需要在求长度为`nums.size()`中的所有值就是结果。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> ans;
+    vector<int> path;
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        sort(nums.begin(), nums.end());
+        // ans.push_back({});
+        // for(int i = 1; i <= nums.size(); i++){
+        //     dfs(nums, 0, i);
+        // }
+        dfs(nums, 0, nums.size());
+        return ans;
+    }
+
+    void dfs(vector<int>& nums, int i, int k){
+        ans.push_back(path);
+        if(k == 0){
+            // ans.push_back(path);
+            return;
+        }
+        int last_val = INT_MIN;
+        for(; i < nums.size(); i++){
+            if(nums[i] == last_val){
+                continue;
+            }
+            last_val = nums[i];
+            path.push_back(nums[i]);
+            dfs(nums, i + 1, k - 1);
+            path.pop_back();
+        }
+    }
+};
+```
+
+### 8. 字符串转换整数 (atoi)
+
+请你来实现一个 myAtoi(string s) 函数，使其能将字符串转换成一个 32 位有符号整数（类似 C/C++ 中的 atoi 函数）。
+
+函数 myAtoi(string s) 的算法如下：
+
+读入字符串并丢弃无用的前导空格
+检查下一个字符（假设还未到字符末尾）为正还是负号，读取该字符（如果有）。 确定最终结果是负数还是正数。 如果两者都不存在，则假定结果为正。
+读入下一个字符，直到到达下一个非数字字符或到达输入的结尾。字符串的其余部分将被忽略。
+将前面步骤读入的这些数字转换为整数（即，"123" -> 123， "0032" -> 32）。如果没有读入数字，则整数为 0 。必要时更改符号（从步骤 2 开始）。
+如果整数数超过 32 位有符号整数范围 [−231,  231 − 1] ，需要截断这个整数，使其保持在这个范围内。具体来说，小于 −231 的整数应该被固定为 −231 ，大于 231 − 1 的整数应该被固定为 231 − 1 。
+返回整数作为最终结果。
+注意：
+
+本题中的空白字符只包括空格字符 ' ' 。
+除前导空格或数字后的其余字符串外，请勿忽略 任何其他字符。
+
+*题解*
+
+考虑到负数能表示的范围更大，所以使用负数来考虑，最后再通过符号来裁剪。
+
+```cpp
+class Solution {
+public:
+    static inline bool convert_digit(char c, int& v){
+        if(c >= '0' && c <= '9'){
+            v = c - '0';
+            return true;
+        }
+        return false;
+    }
+    int myAtoi(string s) {
+        int i = 0;
+        while(i < s.size() && s[i] == ' ') i++;
+        if(i == s.size()) return 0;
+        bool positive = true;
+        if(s[i] == '-' || s[i] == '+'){
+            if(s[i] == '-')
+                positive = false;
+            i++;
+        }
+        int ans = 0;
+        int cur_v;
+        while(i < s.size() && convert_digit(s[i], cur_v)){
+            if(ans < INT_MIN / 10){
+                ans = INT_MIN;
+                break;
+            }
+            ans *= 10;
+            if(ans < INT_MIN + cur_v){
+                ans = INT_MIN;
+                break;
+            }
+            ans -= cur_v;
+            i++;
+        }
+        if(!positive){
+            return ans;
+        }
+        if(ans != INT_MIN){
+            return -ans;
+        }
+        return INT_MAX;
+    }
+};
+```
+
+### 9.回文数
+
+给你一个整数 x ，如果 x 是一个回文整数，返回 true ；否则，返回 false 。
+
+回文数
+是指正序（从左向右）和倒序（从右向左）读都是一样的整数。
+
+例如，121 是回文，而 123 不是。
+
+*题解*
+
+这种解法到是挺有意思的，但要注意`1000`这种情况，必须单独处理。
+
+```cpp
+class Solution {
+public:
+    bool isPalindrome(int x) {
+        if(x < 0 || (x % 10 == 0 && x != 0)){
+            return false;
+        }
+
+        int reverted_num = 0;
+        while(x > reverted_num){
+            reverted_num = reverted_num * 10 + x % 10;
+            x /= 10;
+        }
+        return x == reverted_num || x == reverted_num / 10;
+    }
+};
+```
