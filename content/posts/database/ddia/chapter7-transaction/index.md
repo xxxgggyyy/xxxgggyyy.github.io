@@ -2,6 +2,7 @@
 title: "DDIA - Chapter7 Transaction"
 date: 2024-03-05T16:17:24+08:00
 draft: true
+topics: "database"
 summary: "第七章：事务 - 事务的概念作用、各个隔离级别解决的并发问题"
 ---
 
