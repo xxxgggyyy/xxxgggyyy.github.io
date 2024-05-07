@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://docs.arangodb.com/3.12/deploy/cluster/
+HostUrl=https://docs.arangodb.com/images/cluster_sharding.jpg
