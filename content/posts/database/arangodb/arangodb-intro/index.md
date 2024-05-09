@@ -12,6 +12,8 @@ ArangoDB是一个可扩展的、高可用的图数据库系统。
 
 说是图数据库，但其不止支持图模型，还支持文档模型和Key-Value模型。
 
+> ArangoDB本质上是一个文档数据库
+
 并在其数据模型上提供丰富的查询和计算功能(使用AQL查询语言统一各模型的查询)。
 
 ![overview](./imgs/arangodb-overview-diagram.webp)

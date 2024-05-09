@@ -2,7 +2,7 @@
 title: "Resume Notes"
 date: 2024-03-02T21:06:07+08:00
 topics: "algorithms-and-data-structures"
-draft: false
+draft: true
 tags: ["leetcode"]
 summary: "简历注释"
 ---
